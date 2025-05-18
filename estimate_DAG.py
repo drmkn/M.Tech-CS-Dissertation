@@ -18,22 +18,23 @@ torch.manual_seed(config['seed'])
 torch.set_default_dtype(torch.double)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-data = pd.read_csv(filepath_or_buffer='./datasets/synthetic_dataset/syn-train.csv')
+data = pd.read_csv(filepath_or_buffer=config['train_data'])
 X = torch.tensor(data.to_numpy(), dtype=torch.double).to(device)
 
 model = NotearsMLP(dims=[data.shape[1],5, 1]).to(device)
 
-dag = notears_nonlinear(model=model, X=X.cpu().numpy(),lambda1=0.01)  # notears_nonlinear still expects numpy
+dag = notears_nonlinear(model=model, X=X.cpu().numpy(),lambda1=config.get('lambda1',0)
+                        ,lambda2=config.get('lambda2',0),w_threshold=config.get('w_threshold',0))  # notears_nonlinear still expects numpy
 print(dag)
 
 # Ensure folder exists
-os.makedirs("estimated_dags", exist_ok=True)
+os.makedirs("dags_estimated", exist_ok=True)
 
 # Convert NumPy array to a native list
 dag_list = dag.tolist()
 
 # Save to JSON file in the folder
-with open("estimated_dags/syn_dag.json", "w") as f:
+with open(config['dag_path'], "w") as f:
     json.dump(dag_list, f, indent=4)
 
 
@@ -48,7 +49,7 @@ G.add_nodes_from(range(num_vars))
 for i in range(num_vars):
     for j in range(num_vars):
         if abs(dag[i, j]) > 1e-6:  # Non-zero edge
-            G.add_edge(i, j, weight=dag[i, j])
+            G.add_edge(i, j)
 
 # Map variable names to nodes if available
 if 'var_names' in config:
@@ -64,6 +65,6 @@ edge_labels = nx.get_edge_attributes(G, 'weight')
 nx.draw_networkx_edge_labels(G, pos, edge_labels={k: f"{v:.2f}" for k, v in edge_labels.items()})
 plt.title("Estimated Causal DAG")
 plt.tight_layout()
-plt.savefig("assets/estimated_dag.png")
+plt.savefig(config['dag_graph'])
 plt.close()
 

@@ -9,8 +9,8 @@ config = CONFIG['syn']
 
 seed = config['seed']
 np.random.seed(seed)
-train_samples = config['train_samples']
-test_samples = config['test_samples']
+train_samples = config['train_data']
+test_samples = config['test_data']
 
 def generate_features(num_samples):
     features = np.zeros((num_samples, 3))
@@ -28,7 +28,7 @@ outputs = generate_output(features)
 df = pd.DataFrame(data = {'W':features[:,0], 'Z':features[:,1], 'X':features[:,2], 'Y' : outputs})
 
 train_df, test_df = train_test_split(df, train_size=train_samples/N, random_state=seed)
-
+print(train_df.shape,test_df.shape)
 train_path = os.path.join(script_dir, 'syn-train.csv')
 test_path = os.path.join(script_dir, 'syn-test.csv')
 
