@@ -11,7 +11,7 @@ data.rename(columns={'cylinders':'C','mpg':'M','displacement':'D',
                      'horsepower' : 'H','weight':'W','acceleration':'A'},inplace=True)
 # print(data.dtypes)
 data['H'] = data['H'].astype('float64')
-# print(data.dtypes)
+print(data.dtypes)
 # data = (data - data.min()) / (data.max() - data.min()) #normalisation
 print(data.shape)
 seed = config['seed']

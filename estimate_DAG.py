@@ -11,17 +11,18 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import json
 
-name = 'syn'
-config = CONFIG['syn']
+name = 'mpg'
+config = CONFIG[name]
 np.random.seed(config['seed'])
 torch.manual_seed(config['seed'])
 torch.set_default_dtype(torch.double)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 data = pd.read_csv(filepath_or_buffer=config['train_data'])
+data.drop(columns=config['to_drop'],inplace=True)
 X = torch.tensor(data.to_numpy(), dtype=torch.double).to(device)
 
-model = NotearsMLP(dims=[data.shape[1],5, 1]).to(device)
+model = NotearsMLP(dims=[data.shape[1],10, 1]).to(device)
 
 dag = notears_nonlinear(model=model, X=X.cpu().numpy(),lambda1=config.get('lambda1',0)
                         ,lambda2=config.get('lambda2',0),w_threshold=config.get('w_threshold',0))  # notears_nonlinear still expects numpy
@@ -64,7 +65,7 @@ nx.draw(G, pos, with_labels=True, node_size=1000, node_color='lightblue', font_w
 edge_labels = nx.get_edge_attributes(G, 'weight')
 nx.draw_networkx_edge_labels(G, pos, edge_labels={k: f"{v:.2f}" for k, v in edge_labels.items()})
 plt.title("Estimated Causal DAG")
-plt.tight_layout()
-plt.savefig(config['dag_graph'])
+# plt.tight_layout()
+plt.savefig(config['graph_path'])
 plt.close()
 

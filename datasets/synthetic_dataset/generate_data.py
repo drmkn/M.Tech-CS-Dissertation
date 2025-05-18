@@ -9,8 +9,8 @@ config = CONFIG['syn']
 
 seed = config['seed']
 np.random.seed(seed)
-train_samples = config['train_data']
-test_samples = config['test_data']
+train_samples = config['train_samples']
+test_samples = config['test_samples']
 
 def generate_features(num_samples):
     features = np.zeros((num_samples, 3))
