@@ -1,0 +1,1 @@
+CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600}}
