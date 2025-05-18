@@ -22,7 +22,7 @@ data = pd.read_csv(filepath_or_buffer=config['train_data'])
 data.drop(columns=config['to_drop'],inplace=True)
 X = torch.tensor(data.to_numpy(), dtype=torch.double).to(device)
 
-model = NotearsMLP(dims=[data.shape[1],10, 1]).to(device)
+model = NotearsMLP(dims=[data.shape[1],5, 1]).to(device)
 
 dag = notears_nonlinear(model=model, X=X.cpu().numpy(),lambda1=config.get('lambda1',0)
                         ,lambda2=config.get('lambda2',0),w_threshold=config.get('w_threshold',0))  # notears_nonlinear still expects numpy

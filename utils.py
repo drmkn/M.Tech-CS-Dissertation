@@ -13,6 +13,6 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,
                    'dag_path' : '/home/saptarshi/Dhruv/Dissertation/dags_estimated/mpg_dag.json',
                    'graph_path' : '/home/saptarshi/Dhruv/Dissertation/assets/est_mpg_dag.png',
                    'to_drop' : ['M'], 'var_names' : ['C','D','H','W','A'], 'w_threshold' : 0.3,
-                   'lambda2' : 0.001, 'lambda1' : 0.3
+                   'lambda2' : 0.01, 'lambda1' : 0.1
                    }        
                    }
