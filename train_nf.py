@@ -3,44 +3,47 @@ import pytorch_lightning as pl
 from pytorch_lightning.callbacks import  EarlyStopping
 from pytorch_lightning.loggers import TensorBoardLogger
 import torch
-from DataLoaders import ReturnDataloaders
+from dataloader import CustomDataModule
+from utils import CONFIG
+name = 'syn'
+config = CONFIG[name]
 
-seeds = [10,20,30]
+def train_NF(config):
+    seed = config['seed']
+    torch.manual_seed(seed)
+    pl.seed_everything(seed)
 
-for model_name in num_features.keys():
-    for seed in seeds:   
-        torch.manual_seed(seed)
-        pl.seed_everything(seed)
+    dm = CustomDataModule(config)
+    dm.setup() ##setup train test data
+    adjacency = None
+    flow_ = flow(config['num_features'],adjacency)
+    scm = CausalNF(flow=flow_, lr = 3e-4)
 
-        trainloader, testloader = ReturnDataloaders(dataset=model_name,batch_size=32,seed=seed)
+    run_name = f"{config['name']}_nf"
+    version_name = f"{config['name']}_nf_seed_{seed}"
 
-        flow_ = flow(num_features[model_name],adjacency[model_name])
-        scm = CausalNF(flow=flow_, lr = 3e-4)
+    logger = TensorBoardLogger('models', name=run_name,version=version_name)
 
-        run_name = f"{model_name}_nf"
-        version_name = f"{model_name}_nf_seed_{seed}"
+    early_stopping_callback = EarlyStopping(
+                        monitor='validation_loss',  
+                        patience=10,          
+                        mode='min',           
+                        verbose=True          
+                        )
 
-        logger = TensorBoardLogger('models', name=run_name,version=version_name)
+    trainer = pl.Trainer(default_root_dir = 'lightning_logs',
+                        devices=torch.cuda.device_count(),
+                        callbacks= [scm.checkpoint(), early_stopping_callback],
+                        max_epochs=1000,
+                        fast_dev_run=False,
+                        precision="16-mixed",
+                        reload_dataloaders_every_n_epochs=10,
+                        logger = logger
+                        )
 
-        early_stopping_callback = EarlyStopping(
-                            monitor='validation_loss',  
-                            patience=10,          
-                            mode='min',           
-                            verbose=True          
-                            )
+    torch.backends.cudnn.determinstic = True
+    torch.backends.cudnn.benchmark = False
+
+    trainer.fit(model=scm, datamodule=dm) 
         
-        trainer = pl.Trainer(default_root_dir = 'lightning_logs',
-                            devices=torch.cuda.device_count(),
-                            callbacks= [scm.checkpoint(), early_stopping_callback],
-                            max_epochs=1000,
-                            fast_dev_run=False,
-                            precision="16-mixed",
-                            reload_dataloaders_every_n_epochs=10,
-                            logger = logger
-                            )
-        
-        torch.backends.cudnn.determinstic = True
-        torch.backends.cudnn.benchmark = False
-
-        trainer.fit(model=scm, train_dataloaders= trainloader, val_dataloaders=testloader)
         
