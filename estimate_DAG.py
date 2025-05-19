@@ -19,7 +19,7 @@ torch.set_default_dtype(torch.double)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 data = pd.read_csv(filepath_or_buffer=config['train_data'])
-data.drop(columns=config['to_drop'],inplace=True)
+data.drop(columns=config['target'],inplace=True)
 X = torch.tensor(data.to_numpy(), dtype=torch.double).to(device)
 
 model = NotearsMLP(dims=[data.shape[1],5, 1]).to(device)
