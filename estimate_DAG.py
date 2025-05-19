@@ -2,16 +2,16 @@
 import torch
 import sys
 import os 
-sys.path.append('/home/saptarshi/Dhruv/Dissertation/notears')
+from utils import PREFIX,CONFIG
+sys.path.append(PREFIX +'Dissertation/notears')
 from notears.nonlinear import notears_nonlinear,NotearsMLP
 import pandas as pd
 import numpy as np
-from utils import CONFIG
 import networkx as nx
 import matplotlib.pyplot as plt
 import json
 
-name = 'syn'
+name = 'mpg'
 config = CONFIG[name]
 np.random.seed(config['seed'])
 torch.manual_seed(config['seed'])
