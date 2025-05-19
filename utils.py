@@ -1,4 +1,6 @@
 import torch
+import json
+import numpy as np
 # PREFIX = '/home/saptarshi/Dhruv/'
 PREFIX = '/user1/student/mtc/mtc2023/cs2306/Dhruv/Code/'
 CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num_features' : 3,
@@ -54,3 +56,19 @@ def kernel_matrix(x, y, l):
         x = x.unsqueeze(1)
         y = y.unsqueeze(1)
     return torch.exp(-(1 / (2 * l ** 2)) * torch.cdist(x, y, p=2).pow(2))
+
+
+def get_adjacency(config):
+    with open(config['dag_path'], 'r') as f:
+        dag = json.load(f)
+    
+    dag_adj = np.array(dag)
+
+    binary_adj = (dag_adj != 0) + np.identity(dag_adj.shape[0])
+
+    return torch.tensor(binary_adj,dtype=torch.float32)
+
+
+if __name__ == "__main__":
+    config = CONFIG['syn']
+    print(get_adjacency(config))
