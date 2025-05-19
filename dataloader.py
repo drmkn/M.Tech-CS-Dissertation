@@ -15,28 +15,25 @@ class CustomDataset(Dataset):
         return self.X[idx], self.y[idx]
 
 class CustomDataModule(pl.LightningDataModule):
-    def __init__(self, train_path: str , test_path :str, batch_size: int = 32):
+    def __init__(self, config :dict, batch_size: int = 32):
         super().__init__()
-        self.train_path = train_path
-        self.test_path = test_path
+        self.config = config
+        self.train_path = config['train_data']
+        self.test_path = config['test_data']
         self.batch_size = batch_size
 
     def setup(self, stage=None):
-        # Load and split data
-        train_df = pd.read_csv(self.train_path)
-        test_df = pd.read_csv(self.test_path)
-        dataset = CustomDataset(df)
+        # Load data
+        self.train_dataset = CustomDataset(pd.read_csv(self.train_path),self.config)
+        self.test_dataset = CustomDataset(pd.read_csv(self.test_path),self.config)
 
-        train_len = int(len(dataset) * self.split_ratio)
-        val_len = len(dataset) - train_len
-        self.train_set, self.val_set = random_split(dataset, [train_len, val_len])
 
     def train_dataloader(self):
-        return DataLoader(self.train_set, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
 
     def val_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size)
+        return DataLoader(self.val_dataloader, batch_size=self.config['test_samples'], shuffle=False)
 
-    def test_dataloader(self):
-        return DataLoader(self.val_set, batch_size=self.batch_size)
+    # def test_dataloader(self):
+    #     return DataLoader(self.val_set, batch_size=self.batch_size)
 
