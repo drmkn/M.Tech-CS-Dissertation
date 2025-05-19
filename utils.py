@@ -1,8 +1,8 @@
 import torch
 import json
 import numpy as np
-# PREFIX = '/home/saptarshi/Dhruv/'
-PREFIX = '/user1/student/mtc/mtc2023/cs2306/Dhruv/Code/'
+PREFIX = '/home/saptarshi/Dhruv/'
+# PREFIX = '/user1/student/mtc/mtc2023/cs2306/Dhruv/Code/'
 CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num_features' : 3,
                    'name' : 'syn', 'train_data' : PREFIX + 'Dissertation/datasets/synthetic_dataset/syn-train.csv',
                    'test_data' : PREFIX + 'Dissertation/datasets/synthetic_dataset/syn-test.csv',

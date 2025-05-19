@@ -55,6 +55,16 @@ def train_NF(config):
 if __name__ == "__main__":
     name = 'syn'
     config = CONFIG[name]
-    train_NF(config)
+    ckt = '/home/saptarshi/Dhruv/Dissertation/models/syn_nf/syn_nf_seed_10/checkpoints/epoch=250-step=15813.ckpt'
+    flow_ = flow(3,get_adjacency(config))
+    scm_fit = CausalNF.load_from_checkpoint(checkpoint_path = ckt, flow=flow_, lr=3e-4)
+    scm_fit.eval()
+    flow_ = scm_fit.flow()
+    # print(scm_fit)
+    # print(flow_)
+    base_sample = flow_.base.sample((3,))
+    print(base_sample)
+    x = flow_.transform(base_sample)
+    print(x)
         
         
