@@ -4,6 +4,7 @@ from pytorch_lightning.loggers import TensorBoardLogger
 import torch
 from utils import MMD
 import networkx as nx
+from utils import PREFIX
 
 num_features = {'syn':3, 'auto_mpg':5, 'compas':7}
 
@@ -97,10 +98,13 @@ class CausalNF(pl.LightningModule):
         return [opt]
 
 #----------------------------------------------
+
+import sys
+# sys.path.append(PREFIX+'Dissertation/zuko')
 from zuko.zuko.flows.autoregressive import MaskedAutoregressiveTransform
-from zuko.zuko.flows import Flow, Unconditional, NSF, UnconditionalTransform
+from zuko.zuko.flows import Flow, UnconditionalDistribution, NSF, UnconditionalTransform
 from zuko.zuko.distributions import BoxUniform, DiagNormal
-from zuko.zuko.transforms import ExpTransform, LogTransform, SigmoidTransform
+from zuko.zuko.transforms import SigmoidTransform
 
 def flow(num_features, adjacency, base_ = 'uniform'):
 
@@ -112,12 +116,12 @@ def flow(num_features, adjacency, base_ = 'uniform'):
                                     ),
                    UnconditionalTransform(SigmoidTransform),
         ], 
-        base = Unconditional(
+        base = UnconditionalDistribution(
                    BoxUniform,
                    torch.zeros(num_features),
                    torch.ones(num_features),
                    buffer=True,) if base_ == 'uniform' else 
-                   Unconditional(
+                   UnconditionalDistribution(
                     DiagNormal,
                     torch.zeros(num_features),
                     torch.ones(num_features),
@@ -127,4 +131,7 @@ def flow(num_features, adjacency, base_ = 'uniform'):
     )
     return flow_
 
+
+if __name__ == "__main__":
     
+    pass
