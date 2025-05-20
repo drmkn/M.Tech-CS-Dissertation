@@ -24,28 +24,32 @@ class SampleVisualizationCallback(Callback):
         # self.causal_mask = causal_mask
 
     def on_test_end(self, trainer, pl_module):
-        model = pl_module.eval()
+        pl_module.eval()
         log_dir = trainer.logger.log_dir
 
+        # ======= CausalNF Sampling =======
+        # Get flow module from the model
+        flow_module = pl_module.flow()  # Assuming pl_module is an instance of CausalNF
+
         with torch.no_grad():
-            samples = model.sample(300).cpu().numpy()
+            base_sample = flow_module.base.sample((self.config['test_samples'],))
+            samples = flow_module.transform(base_sample).cpu().numpy()
 
-        # Load a batch from validation loader
-        val_loader = trainer.datamodule.val_dataloader()
-        val_batch = next(iter(val_loader))
+        # ======= Load a batch from validation loader =======
+        test_loader = trainer.datamodule.test_dataloader()
+        test_batch = next(iter(test_loader))
 
-        # Assume val_batch is either (x, y) or just x
-        if isinstance(val_batch, (tuple, list)):
-            val_samples = val_batch[0].cpu().numpy()
+        if isinstance(test_batch, (tuple, list)):
+            test_samples = test_batch[0].cpu().numpy()
         else:
-            val_samples = val_batch.cpu().numpy()
+            test_samples = test_batch.cpu().numpy()
 
-        # ======== KDE Plot Per Dimension ========
-        num_dims = val_samples.shape[1]
+        # ======= KDE Plot Per Dimension =======
+        num_dims = test_samples.shape[1]
         fig, axes = plt.subplots(1, num_dims, figsize=(4 * num_dims, 4))
 
         for i in range(num_dims):
-            sns.kdeplot(val_samples[:, i], label="Validation", ax=axes[i], color="blue")
+            sns.kdeplot(test_samples[:, i], label="Validation", ax=axes[i], color="blue")
             sns.kdeplot(samples[:, i], label="Sampled", ax=axes[i], color="orange")
             axes[i].set_title(f"Dimension {i+1}")
             axes[i].legend()
@@ -53,11 +57,11 @@ class SampleVisualizationCallback(Callback):
         plt.tight_layout()
         self._log_plot(trainer.logger.experiment, fig, "KDE_Plot", trainer.global_step)
 
-        # ======== PCA + KDE + Scatter ========
-        pca = PCA(n_components=2, svd_solver='full')
-        pca.fit(samples)
-        val_samples_2d = pca.transform(val_samples)
-        samples_2d = pca.transform(samples)
+        # ======= PCA + KDE + Scatter =======
+        pca = PCA(n_components=2)
+        # pca.fit(samples)
+        val_samples_2d = pca.fit_transform(test_samples)
+        samples_2d = pca.fit_transform(samples)
 
         df_samples = pd.DataFrame(samples_2d, columns=['PCA1', 'PCA2'])
         df_samples['Type'] = 'Generated'

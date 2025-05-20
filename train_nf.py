@@ -7,6 +7,7 @@ import numpy as np
 from dataloader import CustomDataModule
 from utils import CONFIG,get_adjacency
 import os
+from kde_visualisation_callback import SampleVisualizationCallback
 name = 'syn'
 config = CONFIG[name]
 
@@ -19,9 +20,10 @@ def train_NF(config):
     dm = CustomDataModule(config)
     dm.setup() ##setup train test data
     adjacency = get_adjacency(config)
-    flow_ = flow(config['num_features'],adjacency)
+    flow_ = flow(config['num_features'],adjacency,base_='n')
     scm = CausalNF(flow=flow_, lr = 3e-4)
 
+    vis_callback = SampleVisualizationCallback(config=config)
     run_name = f"{config['name']}_nf"
     version_name = f"{config['name']}_nf_seed_{seed}"
 
@@ -37,7 +39,7 @@ def train_NF(config):
 
     trainer = pl.Trainer(default_root_dir = 'lightning_logs',
                         devices=torch.cuda.device_count(),
-                        callbacks= [scm.checkpoint(), early_stopping_callback],
+                        callbacks= [scm.checkpoint(), early_stopping_callback, vis_callback],
                         max_epochs=1000,
                         fast_dev_run=False,
                         precision="16-mixed",
@@ -49,22 +51,24 @@ def train_NF(config):
     torch.backends.cudnn.benchmark = False
 
     trainer.fit(model=scm, datamodule=dm) 
+    trainer.test(datamodule=dm, ckpt_path='best' )
 
 
 
 if __name__ == "__main__":
-    name = 'syn'
+    name = 'mpg'
     config = CONFIG[name]
-    ckt = '/home/saptarshi/Dhruv/Dissertation/models/syn_nf/syn_nf_seed_10/checkpoints/epoch=250-step=15813.ckpt'
-    flow_ = flow(3,get_adjacency(config))
-    scm_fit = CausalNF.load_from_checkpoint(checkpoint_path = ckt, flow=flow_, lr=3e-4)
-    scm_fit.eval()
-    flow_ = scm_fit.flow()
-    # print(scm_fit)
-    # print(flow_)
-    base_sample = flow_.base.sample((3,))
-    print(base_sample)
-    x = flow_.transform(base_sample)
-    print(x)
+    train_NF(config)
+    # ckt = '/home/saptarshi/Dhruv/Dissertation/models/syn_nf/syn_nf_seed_10/checkpoints/epoch=250-step=15813.ckpt'
+    # flow_ = flow(3,get_adjacency(config))
+    # scm_fit = CausalNF.load_from_checkpoint(checkpoint_path = ckt, flow=flow_, lr=3e-4)
+    # scm_fit.eval()
+    # flow_ = scm_fit.flow()
+    # # print(scm_fit)
+    # # print(flow_)
+    # base_sample = flow_.base.sample((config['test_samples'],))
+    # print(base_sample)
+    # x = flow_.transform(base_sample)
+    # print(x)
         
         
