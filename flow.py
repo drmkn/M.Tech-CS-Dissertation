@@ -89,6 +89,17 @@ class CausalNF(pl.LightningModule):
         #if self.current_epoch%100==0 and batch_idx%5 ==0:
         #    print(f'current_epoch:{self.current_epoch} batch_idx:{batch_idx} loss:{loss}')
         return loss
+    
+    def test_step(self,batch,batch_idx):
+        model=self.flow()
+        x, y = batch
+        x = x.float().to(self.device)
+        y = y.float().to(self.device)
+        u_sample = model.base.sample((x.shape[0],)).to(self.device)
+        x_sample = model.transform(u_sample)
+        loss = MMD(x_sample,x,lengthscale=2.0)  # #
+        self.log(self.monitor,loss)
+        return loss
 
     def checkpoint(self):
         return ModelCheckpoint(save_top_k=1,mode='min',save_last=False,monitor=self.monitor)
