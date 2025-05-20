@@ -69,7 +69,7 @@ class SampleVisualizationCallback(Callback):
 
         # ======= PCA + KDE + Scatter =======
         pca = PCA(n_components=2,svd_solver="full")
-        pca.fit(test_samples)
+        pca.fit(samples)
         val_samples_2d = pca.transform(test_samples)
         samples_2d = pca.transform(samples)
 
