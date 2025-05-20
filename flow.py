@@ -122,7 +122,7 @@ def flow(num_features, adjacency):
     
     flow_=  Flow(
         transform=[MaskedAutoregressiveTransform(features=num_features, 
-                                        hidden_features=[64,64],adjacency = adjacency,
+                                        hidden_features=[256,256],adjacency = adjacency,
                                         activation =torch.nn.LeakyReLU
                                     ),
                    UnconditionalTransform(SigmoidTransform),

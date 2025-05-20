@@ -9,8 +9,7 @@ from utils import CONFIG,get_adjacency
 import os
 from kde_visualisation_callback import SampleVisualizationCallback
 from utils import log_adjacency_as_text
-name = 'syn'
-config = CONFIG[name]
+
 
 def train_NF(config,ground_truth_dag = True):
     torch.set_float32_matmul_precision('high')
@@ -67,7 +66,7 @@ def train_NF(config,ground_truth_dag = True):
 
 
 if __name__ == "__main__":
-    name = 'mpg'
+    name = 'german'
     config = CONFIG[name]
     train_NF(config)
     # ckt = '/home/saptarshi/Dhruv/Dissertation/models/syn_nf/syn_nf_seed_10/checkpoints/epoch=250-step=15813.ckpt'

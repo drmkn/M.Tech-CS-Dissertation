@@ -28,6 +28,18 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                                 [0,0,1,0,1],
                                                 [0,0,0,1,1],
                                                 [0,0,0,0,1]])
+                   },
+          'german' : {'seed' : 10,'train_samples' : 800, 'test_samples' : 200,'num_features' : 4,
+                   'name' : 'german', 'train_data' : PREFIX +'Dissertation/datasets/german_credit/german-train.csv',
+                   'test_data' : PREFIX + 'Dissertation/datasets/german_credit/german-test.csv',
+                   'dag_path' : 'None',
+                   'graph_path' : 'None',
+                   'target' : ['R'], 'var_names' : ['G','A','C','D'], 
+                   'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01,
+                   'gd_adjacency' : torch.tensor([[1,0,1,0],
+                                                  [0,1,1,0],
+                                                  [0,0,1,1],
+                                                  [0,0,0,1]])
                    }        
                    }
 
