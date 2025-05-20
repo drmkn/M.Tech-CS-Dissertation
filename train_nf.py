@@ -8,10 +8,12 @@ from dataloader import CustomDataModule
 from utils import CONFIG,get_adjacency
 import os
 from kde_visualisation_callback import SampleVisualizationCallback
+from utils import log_adjacency_as_text
 name = 'syn'
 config = CONFIG[name]
 
-def train_NF(config):
+def train_NF(config,ground_truth_dag = True):
+    torch.set_float32_matmul_precision('high')
     seed = config['seed']
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -19,17 +21,24 @@ def train_NF(config):
 
     dm = CustomDataModule(config)
     dm.setup() ##setup train test data
-    adjacency = get_adjacency(config)
-    flow_ = flow(config['num_features'],adjacency,base_='n')
+    if ground_truth_dag:
+        adj = config['gd_adjacency']
+        run_name = f"{config['name']}_nf"
+    else:
+        adj = get_adjacency(config)
+        run_name = f"{config['name']}_nf_notears_dag"
+    flow_ = flow(config['num_features'],adj)
     scm = CausalNF(flow=flow_, lr = 3e-4)
 
     vis_callback = SampleVisualizationCallback(config=config)
-    run_name = f"{config['name']}_nf"
-    version_name = f"{config['name']}_nf_seed_{seed}"
-
-    os.makedirs('models',exist_ok=True)
-    logger = TensorBoardLogger('models', name=run_name,version=version_name)
-
+    version_name = f"{config['name']}_nf_seed_{config['seed']}"
+    base_dir = os.path.join("models",run_name,version_name)
+    os.makedirs(base_dir, exist_ok=True)
+    logger = TensorBoardLogger(
+        save_dir=base_dir,
+        name="logs"
+    )
+    log_adjacency_as_text(logger,adj,config['var_names'])
     early_stopping_callback = EarlyStopping(
                         monitor='validation_loss',  
                         patience=10,          
@@ -52,6 +61,8 @@ def train_NF(config):
 
     trainer.fit(model=scm, datamodule=dm) 
     trainer.test(datamodule=dm, ckpt_path='best' )
+
+
 
 
 

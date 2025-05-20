@@ -117,7 +117,7 @@ from zuko.zuko.flows import Flow, UnconditionalDistribution, NSF, UnconditionalT
 from zuko.zuko.distributions import BoxUniform, DiagNormal
 from zuko.zuko.transforms import SigmoidTransform
 
-def flow(num_features, adjacency, base_ = 'uniform'):
+def flow(num_features, adjacency):
 
     
     flow_=  Flow(
@@ -128,12 +128,11 @@ def flow(num_features, adjacency, base_ = 'uniform'):
                    UnconditionalTransform(SigmoidTransform),
         ], 
         base = UnconditionalDistribution(
-                   BoxUniform,
-                   torch.zeros(num_features),
-                   torch.ones(num_features),
-                   buffer=True,) if base_ == 'uniform' else 
-                   UnconditionalDistribution(
-                    DiagNormal,
+                #    BoxUniform,
+                #    torch.zeros(num_features),
+                #    torch.ones(num_features),
+                #    buffer=True,) if base_ == 'uniform' else 
+                    DiagNormal, ##normal base
                     torch.zeros(num_features),
                     torch.ones(num_features),
                     buffer=True,
