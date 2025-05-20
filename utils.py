@@ -1,6 +1,7 @@
 import torch
 import json
 import numpy as np
+import ot
 PREFIX = '/home/saptarshi/Dhruv/'
 # PREFIX = '/user1/student/mtc/mtc2023/cs2306/Dhruv/Code/'
 CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num_features' : 3,
@@ -9,7 +10,10 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'dag_path' : PREFIX + 'Dissertation/dags_estimated/syn_dag.json',
                    'graph_path' : PREFIX +'Dissertation/assets/est_syn_dag.png',
                    'target' : ['Y'], 'var_names' : ['W','Z','X'], 
-                   'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01
+                   'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01,
+                   'gd_adjacency' : torch.tensor([[1,1,1],
+                                                 [0,1,1],
+                                                 [0,0,1]])
                    },
 
           'mpg' : {'seed' : 10,'train_samples' : 274, 'test_samples' : 118,'num_features' : 5,
@@ -17,8 +21,13 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'test_data' : PREFIX + 'Dissertation/datasets/auto+mpg/mpg-test.csv',
                    'dag_path' : PREFIX + 'Dissertation/dags_estimated/mpg_dag.json',
                    'graph_path' : PREFIX + 'Dissertation/assets/est_mpg_dag.png',
-                   'target' : ['M'], 'var_names' : ['C','D','H','W','A'], 'w_threshold' : 0.3,
-                   'lambda2' : 0.01, 'lambda1' : 0.1
+                   'target' : ['M'], 'var_names' : ['C','D','H','W','A'], 'w_threshold' : 0,
+                   'lambda2' : 0.0, 'lambda1' : 0,
+                   'gd_adjacency' : torch.tensor([[1,1,0,1,0],
+                                                [0,1,1,0,1],
+                                                [0,0,1,0,1],
+                                                [0,0,0,1,1],
+                                                [0,0,0,0,1]])
                    }        
                    }
 
@@ -67,6 +76,45 @@ def get_adjacency(config):
     binary_adj = (dag_adj != 0) + np.identity(dag_adj.shape[0])
 
     return torch.tensor(binary_adj,dtype=torch.float32)
+
+def wasserstein_distance(sample_1,sample_2,p=1,return_tensor=False):
+    if sample_1.device != 'cpu':
+        sample_1 = sample_1.to('cpu')
+    if sample_2.device != 'cpu':
+        sample_2 = sample_2.to('cpu')
+
+    assert sample_1.size(0) == sample_2.size(0)
+    num_sample = sample_1.size(0)
+    cost_matrix = ot.dist(x1=sample_1.numpy(),x2=sample_2.numpy(),metric='minkowski',p=p,w=None)
+    distance =ot.emd2(a=np.ones(num_sample)/num_sample,
+                      b=np.ones(num_sample)/num_sample,
+                      M=cost_matrix,
+                      numItermax=1000000,
+                      )
+    # ot_matrix = ot.emd(a=np.ones(num_sample)/num_sample,
+    #                   b=np.ones(num_sample)/num_sample,
+    #                   M=cost_matrix)
+    # print(ot_matrix)
+    if return_tensor:
+        distance = torch.tensor(distance)
+    return distance
+
+def log_adjacency_as_text(logger, adj, var_names, tag="Adjacency Matrix"):
+    if isinstance(adj, torch.Tensor):
+        adj = adj.cpu().numpy()
+    adj = np.array(adj)
+
+    # Header row
+    header = "       " + "  ".join(f"{name:>6}" for name in var_names) + "\n"
+
+    # Each row
+    lines = []
+    for i, row in enumerate(adj):
+        row_str = "  ".join(f"{val:6.1f}" for val in row)
+        lines.append(f"{var_names[i]:>6}  {row_str}")
+
+    formatted_text = header + "\n".join(lines)
+    logger.experiment.add_text(tag, f"```\n{formatted_text}\n```", global_step=0)
 
 
 if __name__ == "__main__":

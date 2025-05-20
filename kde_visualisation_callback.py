@@ -15,6 +15,8 @@ from io import BytesIO
 import PIL.Image
 from pytorch_lightning.callbacks import Callback
 from matplotlib.backends.backend_agg import FigureCanvasAgg
+from utils import wasserstein_distance
+from scipy.stats import wasserstein_distance as WD
 
 
 class SampleVisualizationCallback(Callback):
@@ -35,6 +37,7 @@ class SampleVisualizationCallback(Callback):
             base_sample = flow_module.base.sample((self.config['test_samples'],))
             samples = flow_module.transform(base_sample).cpu().numpy()
 
+        
         # ======= Load a batch from validation loader =======
         test_loader = trainer.datamodule.test_dataloader()
         test_batch = next(iter(test_loader))
@@ -44,35 +47,42 @@ class SampleVisualizationCallback(Callback):
         else:
             test_samples = test_batch.cpu().numpy()
 
+        total_wd = wasserstein_distance(torch.tensor(samples),torch.tensor(test_samples))
+        # Log total WD
+        trainer.logger.experiment.add_scalar("metrics/total_wasserstein", total_wd, global_step=trainer.global_step)
+
         # ======= KDE Plot Per Dimension =======
         num_dims = test_samples.shape[1]
         fig, axes = plt.subplots(1, num_dims, figsize=(4 * num_dims, 4))
 
         for i in range(num_dims):
-            sns.kdeplot(test_samples[:, i], label="Validation", ax=axes[i], color="blue")
+            wd = WD(
+                torch.tensor(test_samples[:, i]), torch.tensor(samples[:, i])
+                )
+            sns.kdeplot(test_samples[:, i], label="Original", ax=axes[i], color="blue")
             sns.kdeplot(samples[:, i], label="Sampled", ax=axes[i], color="orange")
-            axes[i].set_title(f"Dimension {i+1}")
+            axes[i].set_title(f"Dimension {i+1}\nWD = {wd:.4f}")
             axes[i].legend()
 
         plt.tight_layout()
         self._log_plot(trainer.logger.experiment, fig, "KDE_Plot", trainer.global_step)
 
         # ======= PCA + KDE + Scatter =======
-        pca = PCA(n_components=2)
-        # pca.fit(samples)
-        val_samples_2d = pca.fit_transform(test_samples)
-        samples_2d = pca.fit_transform(samples)
+        pca = PCA(n_components=2,svd_solver="full")
+        pca.fit(test_samples)
+        val_samples_2d = pca.transform(test_samples)
+        samples_2d = pca.transform(samples)
 
         df_samples = pd.DataFrame(samples_2d, columns=['PCA1', 'PCA2'])
         df_samples['Type'] = 'Generated'
 
         df_val = pd.DataFrame(val_samples_2d, columns=['PCA1', 'PCA2'])
-        df_val['Type'] = 'Validation'
+        df_val['Type'] = 'Original'
 
         df_all = pd.concat([df_val, df_samples], ignore_index=True)
 
         fig, ax = plt.subplots(figsize=(10, 8))
-        palette = {'Generated': 'red', 'Validation': 'blue'}
+        palette = {'Generated': 'red', 'Original': 'blue'}
 
         sns.kdeplot(
             data=df_all,
@@ -87,7 +97,7 @@ class SampleVisualizationCallback(Callback):
             ax=ax
         )
 
-        for label in ['Generated', 'Validation']:
+        for label in ['Generated', 'Original']:
             subset = df_all[df_all['Type'] == label]
             sns.scatterplot(
                 x=subset['PCA1'], y=subset['PCA2'],
@@ -97,7 +107,7 @@ class SampleVisualizationCallback(Callback):
                 ax=ax
             )
 
-        ax.set_title("2D PCA Projection with KDE (Generated vs Validation Samples)")
+        ax.set_title("2D PCA Projection with KDE (Generated vs Original Samples)")
         ax.set_xlabel("PCA 1")
         ax.set_ylabel("PCA 2")
         ax.legend(title='Data Type')
