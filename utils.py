@@ -35,7 +35,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'dag_path' : 'None',
                    'graph_path' : 'None',
                    'target' : ['R'], 'var_names' : ['G','A','C','D'], 'discrete_cols' : ['G','A','C','D'],
-                   'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01,
+                   'batch_size' : 64,'hidden_features_flow' : [512,512],
                    'gd_adjacency' : torch.tensor([[1,0,1,0],
                                                   [0,1,1,0],
                                                   [0,0,1,1],
