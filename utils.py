@@ -34,7 +34,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'test_data' : PREFIX + 'Dissertation/datasets/german_credit/german-test.csv',
                    'dag_path' : 'None',
                    'graph_path' : 'None',
-                   'target' : ['R'], 'var_names' : ['G','A','C','D'], 
+                   'target' : ['R'], 'var_names' : ['G','A','C','D'], 'discrete_cols' : ['G','A','C','D'],
                    'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01,
                    'gd_adjacency' : torch.tensor([[1,0,1,0],
                                                   [0,1,1,0],
@@ -127,6 +127,14 @@ def log_adjacency_as_text(logger, adj, var_names, tag="Adjacency Matrix"):
 
     formatted_text = header + "\n".join(lines)
     logger.experiment.add_text(tag, f"```\n{formatted_text}\n```", global_step=0)
+
+def convert_to_cont(df,discrete_cols,seed):
+    '''required for the CNF model training'''
+    np.random.seed(seed)
+    for col in discrete_cols:
+        df[col] = df[col] + np.random.rand(df[col].shape[0])
+        
+    return df
 
 
 if __name__ == "__main__":
