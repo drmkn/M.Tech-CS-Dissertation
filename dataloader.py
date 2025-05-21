@@ -15,7 +15,7 @@ class CustomDataset(Dataset):
         return self.X[idx], self.y[idx]
 
 class CustomDataModule(pl.LightningDataModule):
-    def __init__(self, config :dict, batch_size: int = 32):
+    def __init__(self, config :dict, batch_size: int = 64):
         super().__init__()
         self.config = config
         self.train_path = config['train_data']
@@ -30,11 +30,11 @@ class CustomDataModule(pl.LightningDataModule):
 
 
     def train_dataloader(self):
-        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=8)
 
     def val_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(self.val_dataset, batch_size=self.batch_size//2, shuffle=False,num_workers=4)
 
     def test_dataloader(self):
-        return DataLoader(self.test_dataset, batch_size=self.config['test_samples'], shuffle= False)
+        return DataLoader(self.test_dataset, batch_size=self.config['test_samples'], shuffle= False,num_workers=4)
 

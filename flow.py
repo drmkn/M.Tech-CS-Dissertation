@@ -98,7 +98,7 @@ class CausalNF(pl.LightningModule):
         u_sample = model.base.sample((x.shape[0],)).to(self.device)
         x_sample = model.transform(u_sample)
         loss = MMD(x_sample,x,lengthscale=2.0)  # #
-        self.log(self.monitor,loss)
+        self.log('test_loss',loss,prog_bar=True, on_epoch=True, logger=True)
         return loss
 
     def checkpoint(self):
@@ -117,25 +117,25 @@ from zuko.zuko.flows import Flow, UnconditionalDistribution, NSF, UnconditionalT
 from zuko.zuko.distributions import BoxUniform, DiagNormal
 from zuko.zuko.transforms import SigmoidTransform
 
-def flow(num_features, adjacency):
+def flow(num_features, adjacency,hidden_features=[64,64]):
 
     
     flow_=  Flow(
         transform=[MaskedAutoregressiveTransform(features=num_features, 
-                                        hidden_features=[256,256],adjacency = adjacency,
+                                        hidden_features=hidden_features,adjacency = adjacency,
                                         activation =torch.nn.LeakyReLU
                                     ),
                    UnconditionalTransform(SigmoidTransform),
         ], 
         base = UnconditionalDistribution(
-                #    BoxUniform,
-                #    torch.zeros(num_features),
-                #    torch.ones(num_features),
+        #            BoxUniform,
+        #            torch.zeros(num_features),
+        #            torch.ones(num_features)
                 #    buffer=True,) if base_ == 'uniform' else 
                     DiagNormal, ##normal base
                     torch.zeros(num_features),
                     torch.ones(num_features),
-                    buffer=True,
+                    buffer=True
                 ) 
     
     )

@@ -40,7 +40,7 @@ def train_NF(config,ground_truth_dag = True):
     log_adjacency_as_text(logger,adj,config['var_names'])
     early_stopping_callback = EarlyStopping(
                         monitor='validation_loss',  
-                        patience=10,          
+                        patience=20,          
                         mode='min',           
                         verbose=True          
                         )

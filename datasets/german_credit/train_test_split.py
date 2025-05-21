@@ -1,7 +1,8 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from utils import CONFIG
+from utils import CONFIG,convert_to_cont
 import os
+from sklearn.preprocessing import MinMaxScaler
 script_dir = os.path.dirname(os.path.abspath(__file__))
 name = 'german'
 config = CONFIG[name]
@@ -11,9 +12,11 @@ df.rename(columns={'Sex' : 'G', 'Age' : 'A', 'Credit amount':'C',
                     'Duration' : 'D', 'Default' : 'R'},inplace=True)
 df['G'] = df['G'].map({'male': 0, 'female': 1})
 df['R'] = df['R'].map({'good': 0, 'bad': 1})
-df = df.astype(float)
-df = (df - df.min())/(df.max()-df.min())
+df = convert_to_cont(df,config['discrete_cols'],config['seed'])
 train_df, test_df = train_test_split(df, train_size=config['train_samples']/(config['train_samples']+config['test_samples']), random_state=config['seed'])
+scaler = MinMaxScaler()
+train_df = pd.DataFrame(scaler.fit_transform(train_df),columns=config['var_names'] + ['R'])
+test_df = pd.DataFrame(scaler.transform(test_df),columns=config['var_names']+['R'])
 train_path = os.path.join(script_dir, 'german-train.csv')
 test_path = os.path.join(script_dir, 'german-test.csv')
 
