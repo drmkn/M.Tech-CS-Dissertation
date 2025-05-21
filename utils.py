@@ -29,7 +29,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                                 [0,0,0,1,1],
                                                 [0,0,0,0,1]])
                    },
-          'german' : {'seed' : 20,'train_samples' : 800, 'test_samples' : 200,'num_features' : 4,
+          'german' : {'seed' : 30,'train_samples' : 800, 'test_samples' : 200,'num_features' : 4,
                    'name' : 'german', 'train_data' : PREFIX +'Dissertation/datasets/german_credit/german-train.csv',
                    'test_data' : PREFIX + 'Dissertation/datasets/german_credit/german-test.csv',
                    'dag_path' : 'None',
