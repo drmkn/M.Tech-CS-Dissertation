@@ -26,7 +26,7 @@ def train_NF(config,ground_truth_dag = True):
     else:
         adj = get_adjacency(config)
         run_name = f"{config['name']}_nf_notears_dag"
-    flow_ = flow(config['num_features'],adj)
+    flow_ = flow(config['num_features'],adj,config['hidden_features_flow'])
     scm = CausalNF(flow=flow_, lr = 3e-4)
 
     vis_callback = SampleVisualizationCallback(config=config)
@@ -38,6 +38,9 @@ def train_NF(config,ground_truth_dag = True):
         name="logs"
     )
     log_adjacency_as_text(logger,adj,config['var_names'])
+    logger.experiment.add_text('batch_size',str(config['batch_size']),global_step=0)
+    logger.experiment.add_text('hidden_featues_flow',str(config['hidden_features_flow']),global_step=0)
+    logger.experiment.add_text('Architecture',str(scm),global_step=0)
     early_stopping_callback = EarlyStopping(
                         monitor='validation_loss',  
                         patience=20,          

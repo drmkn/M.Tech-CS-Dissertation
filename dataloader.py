@@ -15,12 +15,12 @@ class CustomDataset(Dataset):
         return self.X[idx], self.y[idx]
 
 class CustomDataModule(pl.LightningDataModule):
-    def __init__(self, config :dict, batch_size: int = 64):
+    def __init__(self, config :dict):
         super().__init__()
         self.config = config
         self.train_path = config['train_data']
         self.test_path = config['test_data']
-        self.batch_size = batch_size
+        self.batch_size = config['batch_size']
 
     def setup(self, stage=None):
         # Load data
