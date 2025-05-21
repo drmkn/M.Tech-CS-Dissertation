@@ -34,32 +34,36 @@ class SampleVisualizationCallback(Callback):
         flow_module = pl_module.flow()  # Assuming pl_module is an instance of CausalNF
 
         with torch.no_grad():
-            base_sample = flow_module.base.sample((self.config['test_samples'],))
+            base_sample = flow_module.base.sample((self.config['train_samples'],))
             samples = flow_module.transform(base_sample).cpu().numpy()
 
         
-        # ======= Load a batch from validation loader =======
-        test_loader = trainer.datamodule.test_dataloader()
-        test_batch = next(iter(test_loader))
+        # # ======= Load a batch from validation loader =======
+        # test_loader = trainer.datamodule.train_loader()
+        # test_batch = next(iter(test_loader))
 
-        if isinstance(test_batch, (tuple, list)):
-            test_samples = test_batch[0].cpu().numpy()
-        else:
-            test_samples = test_batch.cpu().numpy()
+        # if isinstance(test_batch, (tuple, list)):
+        #     test_samples = test_batch[0].cpu().numpy()
+        # else:
+        #     test_samples = test_batch.cpu().numpy()
 
-        total_wd = wasserstein_distance(torch.tensor(samples),torch.tensor(test_samples))
+        train_df = pd.read_csv(self.config['train_data'])
+        train_df.drop(columns=self.config['target'],inplace=True)
+        train_samples = train_df.values
+
+        total_wd = wasserstein_distance(torch.tensor(samples),torch.tensor(train_samples))
         # Log total WD
         trainer.logger.experiment.add_scalar("metrics/total_wasserstein", total_wd, global_step=trainer.global_step)
 
         # ======= KDE Plot Per Dimension =======
-        num_dims = test_samples.shape[1]
+        num_dims = train_samples.shape[1]
         fig, axes = plt.subplots(1, num_dims, figsize=(4 * num_dims, 4))
 
         for i in range(num_dims):
             wd = WD(
-                torch.tensor(test_samples[:, i]), torch.tensor(samples[:, i])
+                torch.tensor(train_samples[:, i]), torch.tensor(samples[:, i])
                 )
-            sns.kdeplot(test_samples[:, i], label="Original", ax=axes[i], color="blue")
+            sns.kdeplot(train_samples[:, i], label="Original", ax=axes[i], color="blue")
             sns.kdeplot(samples[:, i], label="Sampled", ax=axes[i], color="orange")
             axes[i].set_title(f"Dimension {i+1}\nWD = {wd:.4f}")
             axes[i].legend()
@@ -70,7 +74,7 @@ class SampleVisualizationCallback(Callback):
         # ======= PCA + KDE + Scatter =======
         pca = PCA(n_components=2,svd_solver="full")
         pca.fit(samples)
-        val_samples_2d = pca.transform(test_samples)
+        val_samples_2d = pca.transform(train_samples)
         samples_2d = pca.transform(samples)
 
         df_samples = pd.DataFrame(samples_2d, columns=['PCA1', 'PCA2'])

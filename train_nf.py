@@ -43,14 +43,14 @@ def train_NF(config,ground_truth_dag = True):
     logger.experiment.add_text('Architecture',str(scm),global_step=0)
     early_stopping_callback = EarlyStopping(
                         monitor='validation_loss',  
-                        patience=20,          
+                        patience=50,          
                         mode='min',           
                         verbose=True          
                         )
 
     trainer = pl.Trainer(default_root_dir = 'lightning_logs',
                         devices=torch.cuda.device_count(),
-                        callbacks= [scm.checkpoint(), early_stopping_callback, vis_callback],
+                        callbacks= [scm.checkpoint(),early_stopping_callback, vis_callback],
                         max_epochs=1000,
                         fast_dev_run=False,
                         precision="16-mixed",
