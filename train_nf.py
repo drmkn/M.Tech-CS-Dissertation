@@ -48,15 +48,19 @@ def train_NF(config,ground_truth_dag = True):
                         verbose=True          
                         )
 
-    trainer = pl.Trainer(default_root_dir = 'lightning_logs',
-                        devices=torch.cuda.device_count(),
-                        callbacks= [scm.checkpoint(),early_stopping_callback, vis_callback],
-                        max_epochs=1000,
-                        fast_dev_run=False,
-                        precision="16-mixed",
-                        reload_dataloaders_every_n_epochs=10,
-                        logger = logger
-                        )
+    use_gpu = torch.cuda.is_available()
+
+    trainer = pl.Trainer(
+                default_root_dir='lightning_logs',
+                accelerator='gpu' if use_gpu else 'cpu',
+                devices=1,  # <- always 1, even for CPU
+                callbacks=[scm.checkpoint(), early_stopping_callback, vis_callback],
+                max_epochs=500,
+                fast_dev_run=False,
+                precision="16-mixed" if use_gpu else 32,
+                reload_dataloaders_every_n_epochs=10,
+                logger=logger
+            )
 
     torch.backends.cudnn.determinstic = True
     torch.backends.cudnn.benchmark = False
