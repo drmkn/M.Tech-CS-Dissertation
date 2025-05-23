@@ -2,13 +2,14 @@ import torch
 import json
 import numpy as np
 import ot
-PREFIX = '/home/saptarshi/Dhruv/'
+# PREFIX = '/home/saptarshi/Dhruv/Dissertation/'
 # PREFIX = '/user1/student/mtc/mtc2023/cs2306/Dhruv/Code/'
+PREFIX = '/home/dhruv/Files/Thesis/Dissertation/Code/'
 CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num_features' : 3,
-                   'name' : 'syn', 'train_data' : PREFIX + 'Dissertation/datasets/synthetic_dataset/syn-train.csv',
-                   'test_data' : PREFIX + 'Dissertation/datasets/synthetic_dataset/syn-test.csv',
-                   'dag_path' : PREFIX + 'Dissertation/dags_estimated/syn_dag.json',
-                   'graph_path' : PREFIX +'Dissertation/assets/est_syn_dag.png',
+                   'name' : 'syn', 'train_data' : PREFIX + 'datasets/synthetic_dataset/syn-train.csv',
+                   'test_data' : PREFIX + 'datasets/synthetic_dataset/syn-test.csv',
+                   'dag_path' : PREFIX + 'dags_estimated/syn_dag.json',
+                   'graph_path' : PREFIX +'assets/est_syn_dag.png',
                    'target' : ['Y'], 'var_names' : ['W','Z','X'], 
                    'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01,
                    'gd_adjacency' : torch.tensor([[1,1,1],
@@ -17,10 +18,10 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    },
 
           'mpg' : {'seed' : 10,'train_samples' : 274, 'test_samples' : 118,'num_features' : 5,
-                   'name' : 'mpg', 'train_data' : PREFIX + 'Dissertation/datasets/auto+mpg/mpg-train.csv',
-                   'test_data' : PREFIX + 'Dissertation/datasets/auto+mpg/mpg-test.csv',
-                   'dag_path' : PREFIX + 'Dissertation/dags_estimated/mpg_dag.json',
-                   'graph_path' : PREFIX + 'Dissertation/assets/est_mpg_dag.png',
+                   'name' : 'mpg', 'train_data' : PREFIX + 'datasets/auto+mpg/mpg-train.csv',
+                   'test_data' : PREFIX + 'datasets/auto+mpg/mpg-test.csv',
+                   'dag_path' : PREFIX + 'dags_estimated/mpg_dag.json',
+                   'graph_path' : PREFIX + 'assets/est_mpg_dag.png',
                    'target' : ['M'], 'var_names' : ['C','D','H','W','A'], 'w_threshold' : 0,
                    'lambda2' : 0.0, 'lambda1' : 0,
                    'gd_adjacency' : torch.tensor([[1,1,0,1,0],
@@ -30,8 +31,8 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                                 [0,0,0,0,1]])
                    },
           'german' : {'seed' : 30,'train_samples' : 800, 'test_samples' : 200,'num_features' : 4,
-                   'name' : 'german', 'train_data' : PREFIX +'Dissertation/datasets/german_credit/german-train.csv',
-                   'test_data' : PREFIX + 'Dissertation/datasets/german_credit/german-test.csv',
+                   'name' : 'german', 'train_data' : PREFIX +'datasets/german_credit/german-train.csv',
+                   'test_data' : PREFIX + 'datasets/german_credit/german-test.csv',
                    'dag_path' : 'None',
                    'graph_path' : 'None',
                    'target' : ['R'], 'var_names' : ['G','A','C','D'], 'discrete_cols' : ['G','A','C','D'],
