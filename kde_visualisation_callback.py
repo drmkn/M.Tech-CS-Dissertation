@@ -9,8 +9,8 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA
-from torch.utils.tensorboard import SummaryWriter
-import torchvision.transforms as transforms
+# from torch.utils.tensorboard import SummaryWriter
+# import torchvision.transforms as transforms
 from io import BytesIO
 import PIL.Image
 from pytorch_lightning.callbacks import Callback

@@ -112,10 +112,10 @@ class CausalNF(pl.LightningModule):
 
 import sys
 # sys.path.append(PREFIX+'Dissertation/zuko')
-from zuko.zuko.flows.autoregressive import MaskedAutoregressiveTransform
-from zuko.zuko.flows import Flow, UnconditionalDistribution, NSF, UnconditionalTransform
-from zuko.zuko.distributions import BoxUniform, DiagNormal
-from zuko.zuko.transforms import SigmoidTransform
+from zuko.flows.autoregressive import MaskedAutoregressiveTransform
+from zuko.flows import Flow, UnconditionalDistribution, NSF, UnconditionalTransform
+from zuko.distributions import BoxUniform, DiagNormal
+from zuko.transforms import SigmoidTransform
 
 def flow(num_features, adjacency,hidden_features=[64,64]):
 
