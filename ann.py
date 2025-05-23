@@ -63,7 +63,7 @@ class ANNLightning(pl.LightningModule):
         self.lr = lr
         self.loss_fn = nn.CrossEntropyLoss() if model.classification else nn.MSELoss()
         self.save_hyperparameters(ignore=['model'])
-
+        self.monitor = 'validation_loss'
         self.test_preds = []
         self.test_targets = []
 
@@ -90,7 +90,7 @@ class ANNLightning(pl.LightningModule):
             prec = precision_score(y_true, y_pred, average='macro', zero_division=0)
             rec = recall_score(y_true, y_pred, average='macro', zero_division=0)
             self.log_dict({
-                "val_loss": loss,
+                self.monitor: loss,
                 "val_acc": acc,
                 "val_f1": f1,
                 "val_precision": prec,
@@ -99,7 +99,7 @@ class ANNLightning(pl.LightningModule):
         else:
             rmse = torch.sqrt(loss)
             self.log_dict({
-                "val_loss": loss,
+                self.monitor: loss,
                 "val_rmse": rmse
             }, prog_bar=True)
 
