@@ -6,7 +6,10 @@ import pytorch_lightning as pl
 class CustomDataset(Dataset):
     def __init__(self, dataframe,config):
         self.X = torch.tensor(dataframe.drop(columns=config['target']).values, dtype=torch.float32)
-        self.y = torch.tensor(dataframe[config['target']].values, dtype=torch.float32).squeeze()
+        if config['classification']:
+            self.y = torch.tensor(dataframe[config['target']].values, dtype=torch.long).squeeze()
+        else:
+            self.y = torch.tensor(dataframe[config['target']].values, dtype=torch.float32).squeeze()    
 
     def __len__(self):
         return len(self.X)
