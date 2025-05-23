@@ -1,6 +1,7 @@
 import torch
 import json
 import numpy as np
+import pandas as pd
 import ot
 # PREFIX = '/home/saptarshi/Dhruv/Dissertation/'
 # PREFIX = '/user1/student/mtc/mtc2023/cs2306/Dhruv/Code/'
@@ -138,6 +139,30 @@ def convert_to_cont(df,discrete_cols,seed):
         df[col] = df[col] + np.random.rand(df[col].shape[0])
         
     return df
+
+def torch_to_csv(tensor,name:str,header):
+    pd.DataFrame(tensor.numpy()).to_csv(name,index=False, header=header)
+
+
+def attr_to_dict(attributions):
+    feature_names, attributions = zip(*attributions)
+    feature_names = list(feature_names)
+    attributions = list(attributions)
+    n = len(feature_names)
+    attr_dict = dict()
+    for i in range(n):
+        attr_dict[feature_names[i]] = [attributions[i]]
+
+    return attr_dict    
+
+def create_feature_attribution_output(feature_names, attribution):
+    # Combine feature names and attribution values into a list of tuples
+    feature_attribution = list(zip(feature_names, attribution.tolist()))
+    
+    # Sort the list of tuples by attribution values in descending order
+    #feature_attribution.sort(key=lambda x: x[1], reverse=True)
+    
+    return feature_attribution
 
 
 if __name__ == "__main__":
