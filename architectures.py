@@ -105,7 +105,7 @@ class AugmentedSCM(nn.Module):
         
 
     def forward(self,epsilon):
-        model = self.scm()
+        model = self.scm.flow()
         X = model.transform(epsilon)
         y= self.mlp(X)
         return y[:,0] 

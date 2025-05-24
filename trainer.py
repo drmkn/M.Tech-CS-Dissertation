@@ -131,6 +131,6 @@ def train_NF(config,ground_truth_dag = True):
 
 
 if __name__ == "__main__":
-    config = CONFIG['german']
+    config = CONFIG['syn']
     # train_MLP(config)
     train_NF(config,True)
