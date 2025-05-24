@@ -23,6 +23,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                     'causal_graph' : nx.DiGraph([ (0,1),(0,2),
                                      (1,2)
                                     ]),
+                    # 'exp_methods' : ["pfi","icc_topo","icc_shap"],                
                     'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
                     'features_names' : ['W','Z','X']                                             
                    },
