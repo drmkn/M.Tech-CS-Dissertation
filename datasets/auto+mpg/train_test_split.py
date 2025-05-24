@@ -12,7 +12,7 @@ data.rename(columns={'cylinders':'C','mpg':'M','displacement':'D',
 # print(data.dtypes)
 data['H'] = data['H'].astype('float64')
 print(data.dtypes)
-# data = (data - data.min()) / (data.max() - data.min()) #normalisation
+data = (data - data.min()) / (data.max() - data.min()) #normalisation
 print(data.shape)
 seed = config['seed']
 np.random.seed(seed)
