@@ -23,12 +23,12 @@ def train_MLP(config):
     dm = CustomDataModule(config)
     dm.setup() ##setup train test data
     
-    model = MLP(input_dim=config['num_features'],hidden_layers=config['hidden_layers_ann'],
+    model = MLP(input_dim=config['num_features'],hidden_layers=config['hidden_layers_mlp'],
                 classification=config['classification'])
     model_pl = MLPLightning(model=model,lr = 3e-4)
 
-    run_name = f"{config['name']}_ann"
-    version_name = f"{config['name']}_ann_seed_{config['seed']}"
+    run_name = f"{config['name']}_mlp"
+    version_name = f"{config['name']}_mlp_seed_{config['seed']}"
     base_dir = os.path.join("models",run_name,version_name)
     os.makedirs(base_dir, exist_ok=True)
     logger = TensorBoardLogger(
@@ -36,7 +36,7 @@ def train_MLP(config):
         name="logs"
     )
     logger.experiment.add_text('batch_size',str(config['batch_size']),global_step=0)
-    logger.experiment.add_text('hidden_layers_ann',str(config['hidden_layers_ann']),global_step=0)
+    logger.experiment.add_text('hidden_layers_mlp',str(config['hidden_layers_mlp']),global_step=0)
     logger.experiment.add_text('Architecture',str(model_pl),global_step=0)
     early_stopping_callback = EarlyStopping(
                         monitor='validation_loss',  
@@ -52,7 +52,7 @@ def train_MLP(config):
                 accelerator='gpu' if use_gpu else 'cpu',
                 devices=1,  # <- always 1, even for CPU
                 callbacks=[model_pl.checkpoint(), early_stopping_callback],
-                max_epochs=20,
+                max_epochs=1000,
                 fast_dev_run=False,
                 precision="16-mixed" if use_gpu else 32,
                 reload_dataloaders_every_n_epochs=10,
@@ -114,7 +114,7 @@ def train_NF(config,ground_truth_dag = True):
                 accelerator='gpu' if use_gpu else 'cpu',
                 devices=1,  # <- always 1, even for CPU
                 callbacks=[scm.checkpoint(), early_stopping_callback, vis_callback],
-                max_epochs=20,
+                max_epochs=1000,
                 fast_dev_run=False,
                 precision="16-mixed" if use_gpu else 32,
                 reload_dataloaders_every_n_epochs=10,
@@ -131,6 +131,6 @@ def train_NF(config,ground_truth_dag = True):
 
 
 if __name__ == "__main__":
-    config = CONFIG['syn']
-    # train_MLP(config)
-    train_NF(config,True)
+    config = CONFIG['german']
+    train_MLP(config=config)
+    train_NF(config=config,ground_truth_dag=True)

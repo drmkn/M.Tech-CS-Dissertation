@@ -14,7 +14,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'graph_path' : PREFIX +'assets/est_syn_dag.png',
                    'target' : ['Y'], 'var_names' : ['W','Z','X'], 
                    'batch_size' : 64,'hidden_layers_flow' : [256,256],
-                   'classification' : False, 'hidden_layers_ann' : [100,100],
+                   'classification' : False, 'hidden_layers_mlp' : [100,100],
                    'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01,
                    'gd_adjacency' : torch.tensor([[1,1,1],
                                                  [0,1,1],
@@ -35,7 +35,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'graph_path' : PREFIX + 'assets/est_mpg_dag.png',
                    'target' : ['M'], 'var_names' : ['C','D','H','W','A'], 'w_threshold' : 0,
                    'lambda2' : 0.0, 'lambda1' : 0,'batch_size' : 64,'hidden_layers_flow' : [256,256],
-                   'classification' : False, 'hidden_layers_ann' : [100,100],
+                   'classification' : False, 'hidden_layers_mlp' : [100,100],
                    'gd_adjacency' : torch.tensor([[1,1,0,1,0],
                                                 [0,1,1,0,1],
                                                 [0,0,1,0,1],
@@ -46,7 +46,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                            (1,2),(1,4),
                                            (2,4),
                                            (3,4)]),
-                    'exp_methods' : ["icc_topo","icc_shap"],
+                    'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
                     'features_names' : ['cylinders','displacement','horsepower','weight','acceleration']                                                  
                    },
           'german' : {'seed' : 30,'train_samples' : 800, 'test_samples' : 200,'num_features' : 4,
@@ -54,7 +54,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'test_data' : PREFIX + 'datasets/german_credit/german-test.csv',
                    'dag_path' : 'None','graph_path' : 'None','target' : ['R'], 'var_names' : ['G','A','C','D'], 
                    'discrete_cols' : ['G','A','C','D'],'batch_size' : 64,'hidden_layers_flow' : [256,256],
-                   'classification' : True, 'hidden_layers_ann' : [256,256],
+                   'classification' : True, 'hidden_layers_mlp' : [256,256],
                    'meta_data' : ['c']*4,
                    'gd_adjacency' : torch.tensor([[1,0,1,0],
                                                   [0,1,1,0],
@@ -62,7 +62,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                                   [0,0,0,1]]),
                     'causal_graph' : nx.DiGraph([ (0,2),(1,2),
                                            (1,2),(2,3)]),
-                    'exp_methods' : ["icc_topo","icc_shap"],
+                    'exp_methods' : ["sp_lime","pfi","icc_topo","icc_shap"],
                     'features_names' : ['gender','age','credit amount','repayment duration']                       
                    }        
                    }
@@ -231,32 +231,6 @@ class Perturbation(BasePerturbation):
         perturbed_samples = original_sample * feature_mask  #+ perturbations * (~feature_mask)
         
         return perturbed_samples
-
-
-# class Stability_Perturbation(BasePerturbation):
-#     def __init__(self, data_format,std =0.05):
-#         self.std = std
-#         super(Stability_Perturbation, self).__init__(data_format)
-
-#     def get_perturbed_inputs(self, original_sample: torch.FloatTensor, feature_mask: torch.BoolTensor,
-#                              num_samples: int, feature_metadata: list) -> torch.tensor:
-#         '''
-#         feature mask : this indicates the static features
-#         num_samples : number of perturbed samples.
-#         '''
-#         feature_type = feature_metadata
-#         assert len(feature_mask) == len(original_sample),\
-#             f"mask size == original sample in get_perturbed_inputs for {self.__class__}"
-        
-        
-#         # Processing continuous columns
-#         perturbations =   torch.normal(0,self.std,[num_samples, len(feature_type)])
-        
-#         # keeping features static that are in top-K based on feature mask
-#         perturbed_samples = original_sample * feature_mask  + perturbations * (~feature_mask)
-        
-#         return torch.clamp(perturbed_samples, min=0.0, max=1.0)
-    
 
 
 
