@@ -12,7 +12,7 @@ from ICC import Intrinsic_Causal_Contribution, all_topological_sorts,ICC_SHAP
 import plotly.graph_objects as go
 import plotly.graph_objects as go
 import json
-from utils import Perturbation, pred_faith,CONFIG
+from utils import Perturbation, pred_faith,CONFIG,generate_causal_graph
 import time
 import plotly.io as pio
 
@@ -21,10 +21,9 @@ exp_indices = {0:"ig", 1:"itg", 2:"sg", 3:"shap", 4:"lime", 5:"sp_lime", 6:"pfi"
 methods_type = {"ig":'local',"itg":'local',"sg":'local',"shap":'local',"lime":'local',"sp_lime":'global',"pfi":'global',"icc_topo":'global',"icc_shap":'global'}
 method_names = {"ig":'IG',"itg":'IxG',"sg":'SG',"shap":'SHAP',"lime":'LIME',"sp_lime":'SP LIME',"pfi":'PFI',"icc_topo":'ICC TOPO',"icc_shap":'ICC SHAP'}
 def generate_global_exps(config, mlp_model, scm_model):
-    
     df = pd.read_csv(config['test_data'])
     inputs = torch.tensor(df.drop(columns=config['target']).values)
-    targets = torch.tensor(df[config['target']].values)
+    targets = torch.tensor(df[config['target']].values,dtype=torch.long).squeeze()
     if config['classification']:
         task = 'classification'
         class_names = [0,1]
@@ -34,7 +33,6 @@ def generate_global_exps(config, mlp_model, scm_model):
         class_names = None 
         labels = None 
     # data_name = config['name']    
-    print(labels.shape)
     methods = config['exp_methods']
     features_names = config['features_names']
     m = len(methods)
@@ -176,6 +174,7 @@ def generate_global_exps(config, mlp_model, scm_model):
     return ge_dict, evaluation_metrics, time_dict, global_explanations
 
 def generate_attr_plot(global_explanations,config):
+    generate_causal_graph(config)
     methods = config['exp_methods']
     features_names = config['features_names']
     m = len(methods)
