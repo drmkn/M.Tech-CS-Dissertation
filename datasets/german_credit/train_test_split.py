@@ -1,12 +1,12 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
-from utils import CONFIG,convert_to_cont
+from utils import CONFIG,convert_to_cont,PREFIX
 import os
 from sklearn.preprocessing import MinMaxScaler
 script_dir = os.path.dirname(os.path.abspath(__file__))
 name = 'german'
 config = CONFIG[name]
-df = pd.read_csv("/home/saptarshi/Dhruv/Dissertation/datasets/german_credit/german_credit_data.csv")
+df = pd.read_csv(PREFIX +"datasets/german_credit/german_credit_data.csv")
 df = df.drop(columns=['Index'])
 df.rename(columns={'Sex' : 'G', 'Age' : 'A', 'Credit amount':'C',
                     'Duration' : 'D', 'Default' : 'R'},inplace=True)

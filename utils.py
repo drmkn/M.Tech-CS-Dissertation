@@ -71,7 +71,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                 'test_data' : PREFIX + 'datasets/lung_cancer/cancer-test.csv',
                 'dag_path' : 'None','graph_path' : 'None','target' : ['D'], 
                 'var_names' : ['A','T','S','L','B','E','X'], 
-                'discrete_cols' : ['A','T','S','L','B','E','X'],'batch_size' : 64,'hidden_layers_flow' : [256,256],
+                'discrete_cols' : ['A','T','S','L','B','E','X'],'batch_size' : 64,'hidden_layers_flow' : [128,128],
                 'classification' : True, 'hidden_layers_mlp' : [256,256],
                 'meta_data' : ['c']*7,
                 'gd_adjacency' : torch.tensor([ [1,1,0,0,0,0,0],

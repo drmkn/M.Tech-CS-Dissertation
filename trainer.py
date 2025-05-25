@@ -40,7 +40,7 @@ def train_MLP(config):
     logger.experiment.add_text('Architecture',str(model_pl),global_step=0)
     early_stopping_callback = EarlyStopping(
                         monitor='validation_loss',  
-                        patience=50,          
+                        patience=100,          
                         mode='min',           
                         verbose=True          
                         )
@@ -102,7 +102,7 @@ def train_NF(config,ground_truth_dag = True):
     logger.experiment.add_text('Architecture',str(scm),global_step=0)
     early_stopping_callback = EarlyStopping(
                         monitor='validation_loss',  
-                        patience=50,          
+                        patience=100,          
                         mode='min',           
                         verbose=True          
                         )
@@ -131,6 +131,9 @@ def train_NF(config,ground_truth_dag = True):
 
 
 if __name__ == "__main__":
-    config = CONFIG['cancer']
-    train_MLP(config=config)
-    train_NF(config=config,ground_truth_dag=True)
+    for name in ['german','cancer']:
+        for seed in [10,20,30]:
+            CONFIG[name]['seed'] = seed
+            config = CONFIG[name]
+            train_MLP(config=config)
+            # train_NF(config=config,ground_truth_dag=True)
