@@ -62,7 +62,8 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                                   [0,0,0,1]]),
                     'causal_graph' : nx.DiGraph([ (0,2),(1,2),
                                            (1,2),(2,3)]),
-                    'exp_methods' : ["sp_lime","pfi","icc_topo","icc_shap"],
+                    # 'exp_methods' : ["icc_topo","icc_shap"],                       
+                    'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
                     'features_names' : ['gender','age','credit amount','repayment duration']                       
                    }        
                    }
@@ -361,8 +362,37 @@ def generate_lime_exp(data,features_names,class_names, network, task='classifica
             local_explanations[feature].append(attr)
     return local_explanations
 
+import networkx as nx
+import os
+import matplotlib.pyplot as plt
+def generate_causal_graph(config):
+    num_vars = config['num_features']
+    dag = config['gd_adjacency'] - torch.eye(num_vars) # 1's on the diagonal were required for the flow model
+    G = nx.DiGraph()
+    G.add_nodes_from(range(num_vars))
 
+    # Add edges from adjacency matrix
+    for i in range(num_vars):
+        for j in range(num_vars):
+            if abs(dag[i, j]) > 0:  # Non-zero edge
+                G.add_edge(i, j)
 
+    # Map variable names to nodes if available
+    if 'var_names' in config:
+        mapping = {i: name for i, name in enumerate(config['var_names'])}
+        G = nx.relabel_nodes(G, mapping)
+
+    # Save figure
+    os.makedirs("assets", exist_ok=True)
+    plt.figure(figsize=(6, 5))
+    pos = nx.spring_layout(G,seed=config['seed'])
+    nx.draw(G, pos, with_labels=True, node_size=1000, node_color='lightblue', font_weight='bold', arrows=True)
+    plt.title(f"Ground Truth Causal DAG assumed for {config['name']} dataset", pad=20)
+
+    # Adjust layout and save with bbox_inches
+    plt.tight_layout()
+    plt.savefig(f"assets/{config['name']}_dag.png", bbox_inches='tight')
+    plt.close()
 
 
 
