@@ -131,6 +131,6 @@ def train_NF(config,ground_truth_dag = True):
 
 
 if __name__ == "__main__":
-    config = CONFIG['german']
+    config = CONFIG['cancer']
     train_MLP(config=config)
     train_NF(config=config,ground_truth_dag=True)
