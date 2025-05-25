@@ -65,7 +65,28 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                     # 'exp_methods' : ["icc_topo","icc_shap"],                       
                     'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
                     'features_names' : ['gender','age','credit amount','repayment duration']                       
-                   }        
+                   },
+            'cancer' : {'seed' : 10,'train_samples' : 8000, 'test_samples' : 2000,'num_features' : 7,
+                'name' : 'cancer', 'train_data' : PREFIX +'datasets/lung_cancer/cancer-train.csv',
+                'test_data' : PREFIX + 'datasets/lung_cancer/cancer-test.csv',
+                'dag_path' : 'None','graph_path' : 'None','target' : ['D'], 
+                'var_names' : ['A','T','S','L','B','E','X'], 
+                'discrete_cols' : ['A','T','S','L','B','E','X'],'batch_size' : 64,'hidden_layers_flow' : [256,256],
+                'classification' : True, 'hidden_layers_mlp' : [256,256],
+                'meta_data' : ['c']*7,
+                'gd_adjacency' : torch.tensor([ [1,1,0,0,0,0,0],
+                                                [0,1,0,0,0,1,0],
+                                                [0,0,1,1,1,0,0],
+                                                [0,0,0,1,0,1,0],
+                                                [0,0,0,0,1,0,0],
+                                                [0,0,0,0,0,1,1],
+                                                [0,0,0,0,0,0,1]]),
+                'causal_graph' : nx.DiGraph([(0,1),(1,5),(2,3),(2,4),
+                                             (3,5),(5,6)]),
+                # 'exp_methods' : ["icc_topo","icc_shap"],                       
+                'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
+                'features_names' : ['asia','tub','smoke','lung','bronc','either','xray']                       
+                }        
                    }
 
 #for "ig","itg","sg","shap" local explanations
