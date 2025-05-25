@@ -14,7 +14,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'graph_path' : PREFIX +'assets/est_syn_dag.png',
                    'target' : ['Y'], 'var_names' : ['W','Z','X'], 
                    'batch_size' : 64,'hidden_layers_flow' : [256,256],
-                   'classification' : False, 'hidden_layers_ann' : [100,100],
+                   'classification' : False, 'hidden_layers_mlp' : [100,100],
                    'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01,
                    'gd_adjacency' : torch.tensor([[1,1,1],
                                                  [0,1,1],
@@ -35,7 +35,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'graph_path' : PREFIX + 'assets/est_mpg_dag.png',
                    'target' : ['M'], 'var_names' : ['C','D','H','W','A'], 'w_threshold' : 0,
                    'lambda2' : 0.0, 'lambda1' : 0,'batch_size' : 64,'hidden_layers_flow' : [256,256],
-                   'classification' : False, 'hidden_layers_ann' : [100,100],
+                   'classification' : False, 'hidden_layers_mlp' : [100,100],
                    'gd_adjacency' : torch.tensor([[1,1,0,1,0],
                                                 [0,1,1,0,1],
                                                 [0,0,1,0,1],
@@ -46,7 +46,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                            (1,2),(1,4),
                                            (2,4),
                                            (3,4)]),
-                    'exp_methods' : ["icc_topo","icc_shap"],
+                    'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
                     'features_names' : ['cylinders','displacement','horsepower','weight','acceleration']                                                  
                    },
           'german' : {'seed' : 30,'train_samples' : 800, 'test_samples' : 200,'num_features' : 4,
@@ -54,7 +54,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'test_data' : PREFIX + 'datasets/german_credit/german-test.csv',
                    'dag_path' : 'None','graph_path' : 'None','target' : ['R'], 'var_names' : ['G','A','C','D'], 
                    'discrete_cols' : ['G','A','C','D'],'batch_size' : 64,'hidden_layers_flow' : [256,256],
-                   'classification' : True, 'hidden_layers_ann' : [256,256],
+                   'classification' : True, 'hidden_layers_mlp' : [256,256],
                    'meta_data' : ['c']*4,
                    'gd_adjacency' : torch.tensor([[1,0,1,0],
                                                   [0,1,1,0],
@@ -62,9 +62,31 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                                   [0,0,0,1]]),
                     'causal_graph' : nx.DiGraph([ (0,2),(1,2),
                                            (1,2),(2,3)]),
-                    'exp_methods' : ["icc_topo","icc_shap"],
+                    # 'exp_methods' : ["icc_topo","icc_shap"],                       
+                    'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
                     'features_names' : ['gender','age','credit amount','repayment duration']                       
-                   }        
+                   },
+            'cancer' : {'seed' : 10,'train_samples' : 2400, 'test_samples' : 600,'num_features' : 7,
+                'name' : 'cancer', 'train_data' : PREFIX +'datasets/lung_cancer/cancer-train.csv',
+                'test_data' : PREFIX + 'datasets/lung_cancer/cancer-test.csv',
+                'dag_path' : 'None','graph_path' : 'None','target' : ['D'], 
+                'var_names' : ['A','T','S','L','B','E','X'], 
+                'discrete_cols' : ['A','T','S','L','B','E','X'],'batch_size' : 64,'hidden_layers_flow' : [256,256],
+                'classification' : True, 'hidden_layers_mlp' : [256,256],
+                'meta_data' : ['c']*7,
+                'gd_adjacency' : torch.tensor([ [1,1,0,0,0,0,0],
+                                                [0,1,0,0,0,1,0],
+                                                [0,0,1,1,1,0,0],
+                                                [0,0,0,1,0,1,0],
+                                                [0,0,0,0,1,0,0],
+                                                [0,0,0,0,0,1,1],
+                                                [0,0,0,0,0,0,1]]),
+                'causal_graph' : nx.DiGraph([(0,1),(1,5),(2,3),(2,4),
+                                             (3,5),(5,6)]),
+                # 'exp_methods' : ["icc_topo","icc_shap"],                       
+                'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi"],
+                'features_names' : ['asia','tub','smoke','lung','bronc','either','xray']                       
+                }        
                    }
 
 #for "ig","itg","sg","shap" local explanations
@@ -233,32 +255,6 @@ class Perturbation(BasePerturbation):
         return perturbed_samples
 
 
-# class Stability_Perturbation(BasePerturbation):
-#     def __init__(self, data_format,std =0.05):
-#         self.std = std
-#         super(Stability_Perturbation, self).__init__(data_format)
-
-#     def get_perturbed_inputs(self, original_sample: torch.FloatTensor, feature_mask: torch.BoolTensor,
-#                              num_samples: int, feature_metadata: list) -> torch.tensor:
-#         '''
-#         feature mask : this indicates the static features
-#         num_samples : number of perturbed samples.
-#         '''
-#         feature_type = feature_metadata
-#         assert len(feature_mask) == len(original_sample),\
-#             f"mask size == original sample in get_perturbed_inputs for {self.__class__}"
-        
-        
-#         # Processing continuous columns
-#         perturbations =   torch.normal(0,self.std,[num_samples, len(feature_type)])
-        
-#         # keeping features static that are in top-K based on feature mask
-#         perturbed_samples = original_sample * feature_mask  + perturbations * (~feature_mask)
-        
-#         return torch.clamp(perturbed_samples, min=0.0, max=1.0)
-    
-
-
 
 def pred_faith(k, inputs, targets, task, explanations, invert, model,  perturb_method:Perturbation,
                            feature_metadata, ):#n_samples, seed):
@@ -387,8 +383,37 @@ def generate_lime_exp(data,features_names,class_names, network, task='classifica
             local_explanations[feature].append(attr)
     return local_explanations
 
+import networkx as nx
+import os
+import matplotlib.pyplot as plt
+def generate_causal_graph(config):
+    num_vars = config['num_features']
+    dag = config['gd_adjacency'] - torch.eye(num_vars) # 1's on the diagonal were required for the flow model
+    G = nx.DiGraph()
+    G.add_nodes_from(range(num_vars))
 
+    # Add edges from adjacency matrix
+    for i in range(num_vars):
+        for j in range(num_vars):
+            if abs(dag[i, j]) > 0:  # Non-zero edge
+                G.add_edge(i, j)
 
+    # Map variable names to nodes if available
+    if 'var_names' in config:
+        mapping = {i: name for i, name in enumerate(config['var_names'])}
+        G = nx.relabel_nodes(G, mapping)
+
+    # Save figure
+    os.makedirs("assets", exist_ok=True)
+    plt.figure(figsize=(6, 5))
+    pos = nx.spring_layout(G,seed=config['seed'])
+    nx.draw(G, pos, with_labels=True, node_size=1000, node_color='lightblue', font_weight='bold', arrows=True)
+    plt.title(f"Ground Truth Causal DAG assumed for {config['name']} dataset", pad=20)
+
+    # Adjust layout and save with bbox_inches
+    plt.tight_layout()
+    plt.savefig(f"assets/{config['name']}_dag.png", bbox_inches='tight')
+    plt.close()
 
 
 

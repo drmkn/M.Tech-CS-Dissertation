@@ -108,7 +108,7 @@ class AugmentedSCM(nn.Module):
         model = self.scm.flow()
         X = model.transform(epsilon)
         y= self.mlp(X)
-        return y[:,0] 
+        return y[:,0]
 
 #------------------------------AugmentedSCM--------------------------------------------# 
 
@@ -119,5 +119,5 @@ if __name__ == "__main__":
     config = CONFIG['german']
     # flow_ = flow(config['num_features'],config['gd_adjacency'])
     # print(flow_)
-    Augscm = AugmentedSCM(flow(config['num_features'],config['gd_adjacency']),MLP(config['num_features'],config['hidden_layers_ann']))
+    Augscm = AugmentedSCM(flow(config['num_features'],config['gd_adjacency']),MLP(config['num_features'],config['hidden_layers_mlp']))
     print(Augscm(torch.randn(10,config['num_features'])))

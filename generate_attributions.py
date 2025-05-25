@@ -12,23 +12,18 @@ from ICC import Intrinsic_Causal_Contribution, all_topological_sorts,ICC_SHAP
 import plotly.graph_objects as go
 import plotly.graph_objects as go
 import json
-from utils import Perturbation, pred_faith,CONFIG
+from utils import Perturbation, pred_faith,CONFIG,generate_causal_graph
 import time
 import plotly.io as pio
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 exp_indices = {0:"ig", 1:"itg", 2:"sg", 3:"shap", 4:"lime", 5:"sp_lime", 6:"pfi", 7:"icc_topo", 8:"icc_shap"}
 methods_type = {"ig":'local',"itg":'local',"sg":'local',"shap":'local',"lime":'local',"sp_lime":'global',"pfi":'global',"icc_topo":'global',"icc_shap":'global'}
-# methods = list(exp_indices.values())
 method_names = {"ig":'IG',"itg":'IxG',"sg":'SG',"shap":'SHAP',"lime":'LIME',"sp_lime":'SP LIME',"pfi":'PFI',"icc_topo":'ICC TOPO',"icc_shap":'ICC SHAP'}
-# methods = ["icc_topo","icc_shap"]
-# print(methods)
-# methods.remove("sp_lime")
-def generate_global_exps(config, ann_model, scm_model):
-    
+def generate_global_exps(config, mlp_model, scm_model):
     df = pd.read_csv(config['test_data'])
     inputs = torch.tensor(df.drop(columns=config['target']).values)
-    targets = torch.tensor(df[config['target']].values)
+    targets = torch.tensor(df[config['target']].values,dtype=torch.long).squeeze()
     if config['classification']:
         task = 'classification'
         class_names = [0,1]
@@ -59,22 +54,20 @@ def generate_global_exps(config, ann_model, scm_model):
         # for rqmc in rqmcs:
             if method == "lime":
                 start_time = time.time()
-                local_exps = generate_lime_exp(inputs,features_names,class_names,ann_model,task)
+                local_exps = generate_lime_exp(inputs,features_names,class_names,mlp_model,task)
                 end_time = time.time()
                 time_dict[method] += (end_time-start_time)
 
             elif method == "sp_lime":
-                # print(sp_lime(inputs,features_names,class_names,ann_model,task))
-                # print(class_names)
                 start_time = time.time()
-                global_exps = attr_to_dict(sp_lime(inputs,features_names,class_names,ann_model,task))
+                global_exps = attr_to_dict(sp_lime(inputs,features_names,class_names,mlp_model,task))
                 end_time = time.time()
                 time_dict[method] += (end_time-start_time)
 
             elif method == "pfi":
                 start_time = time.time()
-                feature_permutation = FeaturePermutation(ann_model)
-                attribution = feature_permutation.attribute(inputs.float(),target = torch.argmax(ann_model(inputs.float()),dim=1))
+                feature_permutation = FeaturePermutation(mlp_model)
+                attribution = feature_permutation.attribute(inputs.float(),target = torch.argmax(mlp_model(inputs.float()),dim=1))
                 attribution = torch.mean(torch.abs(attribution),dim=0)
                 normalized_attribution = attribution/torch.sum(attribution)
                 global_exps = attr_to_dict(create_feature_attribution_output(features_names,normalized_attribution))
@@ -83,7 +76,7 @@ def generate_global_exps(config, ann_model, scm_model):
 
             elif method == "icc_topo":
                 start_time = time.time()
-                aug_scm = AugmentedSCM(scm_ = scm_model , mlp_ = ann_model)
+                aug_scm = AugmentedSCM(scm_ = scm_model , mlp_ = mlp_model)
                 causal_graph = config['causal_graph']
                 icc_topo = torch.cat(Intrinsic_Causal_Contribution(neural_network=aug_scm,
                                 topological_orederings= all_topological_sorts(causal_graph,n),
@@ -97,7 +90,7 @@ def generate_global_exps(config, ann_model, scm_model):
 
             elif method == "icc_shap":
                 start_time = time.time()
-                aug_scm = AugmentedSCM(scm_ = scm_model , mlp_ = ann_model)
+                aug_scm = AugmentedSCM(scm_ = scm_model , mlp_ = mlp_model)
                 icc_shap = torch.cat(ICC_SHAP(dim=n,model=aug_scm,sample_size=50000,rqmc=False),dim=0).to('cpu')
                 global_exps = attr_to_dict(create_feature_attribution_output(features_names,icc_shap))
                 end_time = time.time()
@@ -106,10 +99,9 @@ def generate_global_exps(config, ann_model, scm_model):
             else:
                 # for "ig","itg","sg","shap"
                 start_time = time.time()
-                # param_dict = load_config(config)['explainers'][method]
                 param_dict = openxai_config[method]
                 param_dict = fill_param_dict(method, param_dict, inputs)
-                explainer = Explainer(method=method, model=ann_model, param_dict=param_dict)
+                explainer = Explainer(method=method, model=mlp_model, param_dict=param_dict)
                 local_exps = explainer.get_explanations(inputs, labels).to('cpu')
                 end_time = time.time()
                 time_dict[method] += (end_time-start_time)
@@ -147,7 +139,6 @@ def generate_global_exps(config, ann_model, scm_model):
                     os.makedirs(path)
                 global_df.to_csv(path_to_csv,index = False)
 
-            # print(global_exps)
             ge_dict[method] = global_exps
             ge = []
             for feature,attr in global_exps.items():
@@ -156,19 +147,17 @@ def generate_global_exps(config, ann_model, scm_model):
             ge = torch.tensor(ge).to('cpu')
 
             perturb_method =   Perturbation("tabular")
-            # print(ge.repeat(inputs.shape[0],1).shape,inputs.shape)
             evaluation_metrics[method]['pgu'] = dict()
             evaluation_metrics[method]['pgi'] = dict()
             for k in range(1,n+1):
                 pgi = pred_faith(explanations= ge.repeat(inputs.shape[0],1).float().to('cpu'),
-                            inputs=inputs.float(),task = task, targets= targets,model = ann_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =False
+                            inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =False
                             )
                 pgu = pred_faith(explanations= ge.repeat(inputs.shape[0],1).float().to('cpu'),
-                            inputs=inputs.float(),task = task, targets= targets,model = ann_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =True
+                            inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =True
                             )
                 evaluation_metrics[method]['pgu'][f'k={k}'] = list((pgu[0].item(),pgu[1].item()))
                 evaluation_metrics[method]['pgi'][f'k={k}'] = list((pgi[0].item(),pgi[1].item()))
-                # evaluation_metrics[method][f'k={k}'].append(pgu.item())
     
     output_data = {
                     "ge_dict": ge_dict,
@@ -181,10 +170,11 @@ def generate_global_exps(config, ann_model, scm_model):
     os.makedirs(fp,exist_ok=True)
     with open(fp + "attribution.json", "w") as f:
         json.dump(output_data, f, indent=4)
-    # return global_explanations,evaluation_metrics,Time_dict,ge_dict
+
     return ge_dict, evaluation_metrics, time_dict, global_explanations
 
 def generate_attr_plot(global_explanations,config):
+    generate_causal_graph(config)
     methods = config['exp_methods']
     features_names = config['features_names']
     m = len(methods)
@@ -277,97 +267,12 @@ def generate_attr_plot(global_explanations,config):
         showlegend=True
     )
 
-    # Show the plot
-    # fig.show()
     os.makedirs("assets",exist_ok=True)
     pio.write_image(fig, f'assets/{config['name']}_attributions.png', format='png', width=1000, height=800, scale=2)
 
     return fig
 
-# def generate_attr_plot(global_explanations, config):
-#     # Convert global_explanations dictionary to a 2D array for plotting
-#     methods = config['exp_methods']
-#     features_names = config['features_names']
-#     m = len(methods)
-#     n = len(features_names)
-#     ge_values = np.zeros((m, n))
-#     for i in range(n):
-#         ge_values[:, i] = global_explanations[features_names[i]]
 
-#     # Plotly grouped bar chart
-#     fig = go.Figure()
-
-#     # Color-blind-friendly palette
-#     color_blind_palette = [
-#         "#E69F00",  # Orange
-#         "#56B4E9",  # Light Blue
-#         "#009E73",  # Green
-#         "#F5C710",  # Amber
-#         "#0072B2",  # Blue
-#         "#999999",  # Grey
-#         "#000000",  # Black
-#         "#D55E00",  # Red
-#         "#CC79A7",  # Purple
-#     ]
-
-#     # Add bars for each method
-#     for i, method in enumerate(methods):
-#         fig.add_trace(go.Bar(
-#             x=features_names,
-#             y=ge_values[i],
-#             name=method_names[method],
-#             marker=dict(
-#                 color=color_blind_palette[i],
-#                 line=dict(width=0.05)
-#             ),
-#             width=0.1  # Increase bar width to reduce spacing between bars
-#         ))
-
-#     # Update the layout to improve visualization
-#     fig.update_layout(
-#         # yaxis_title='Attributions',
-#         barmode='group',  # Group bars side-by-side
-#         bargap=0.2,  # Reduce spacing between bars (default is 0.2)
-#         bargroupgap=0.1,  # Reduce spacing between groups of bars
-#         plot_bgcolor='rgba(0,0,0,0)',  # Transparent background
-#         font=dict(size=14),
-#         legend_title_text='Method',
-
-#         # X-axis settings
-#         xaxis=dict(
-#             tickmode='array',
-#             tickvals=list(range(len(features_names))),  # Align ticks to bars
-#             ticktext=features_names,  # Feature names as tick labels
-#             tickfont=dict(size=30, color='black', family='Times New Roman'),
-#             linecolor='lightgray',
-#             tickcolor='lightgray',
-#             range=[-0.5, len(features_names)-0.5],  # Adjust axis range
-#             showgrid=False
-#         ),
-#         # Y-axis settings
-#         yaxis=dict(
-#             title=dict(font=dict(size=25, color='black', family='Times New Roman')),
-#             linecolor='lightgray',
-#             tickcolor='lightgray',
-#             ticks='outside',
-#             tickfont=dict(size=29, color='black', family='Times New Roman'),
-#             showgrid=True,
-#             gridcolor='lightgray',
-#             dtick=0.1,
-#             range=[0, 0.9]
-#         ),
-#         # Legend settings
-#         legend=dict(
-#             font=dict(size=29, color='black', family='Times New Roman'),
-#             title_font=dict(size=29, color='black', family='Times New Roman')
-#         ),
-#         showlegend=False
-#     )
-
-#     # Show the plot
-#     fig.show()
-
-#     return fig
 
 if __name__ == "__main__":
     from utils import CONFIG
