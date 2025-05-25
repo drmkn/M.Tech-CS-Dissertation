@@ -56,7 +56,7 @@ assert model.check_model()
 
 # Sample data
 sampler = BayesianModelSampling(model)
-df_asia = sampler.forward_sample(size=10000, seed=42)
+df_asia = sampler.forward_sample(size=3000, seed=42)
 
 # Save to CSV
 csv_file = PREFIX + "datasets/lung_cancer/data.csv"
