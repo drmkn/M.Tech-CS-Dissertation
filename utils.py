@@ -62,7 +62,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                                   [0,0,0,1]]),
                     'causal_graph' : nx.DiGraph([ (0,2),(1,2),
                                            (1,2),(2,3)]),
-                    # 'exp_methods' : ["icc_topo","icc_shap"],                       
+                    # 'exp_methods' : ["icc_shap"],                       
                     'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
                     'features_names' : ['gender','age','credit amount','repayment duration']                       
                    },
@@ -83,8 +83,8 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                                 [0,0,0,0,0,0,1]]),
                 'causal_graph' : nx.DiGraph([(0,1),(1,5),(2,3),(2,4),
                                              (3,5),(5,6)]),
-                # 'exp_methods' : ["icc_topo","icc_shap"],                       
-                'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi"],
+                # 'exp_methods' : ["icc_topo"],                       
+                'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo"],
                 'features_names' : ['asia','tub','smoke','lung','bronc','either','xray']                       
                 }        
                    }
