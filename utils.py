@@ -448,7 +448,7 @@ def compute_pgu_pgi_sums(evaluation_metrics: Dict) -> Dict[str, Dict[str, float]
 
 
 def evaluate_exp(ge_dict,config,mlp_model):
-    n = len(ge_dict)
+    n = config['num_features']
     evaluation_metrics = dict()
     df = pd.read_csv(config['test_data'])
     targets = torch.tensor(df[config['target']].values,dtype=torch.long).squeeze()
