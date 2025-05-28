@@ -11,7 +11,7 @@ import networkx as nx
 import matplotlib.pyplot as plt
 import json
 
-name = 'mpg'
+name = 'syn'
 config = CONFIG[name]
 np.random.seed(config['seed'])
 torch.manual_seed(config['seed'])

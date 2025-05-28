@@ -9,8 +9,8 @@ import seaborn as sns
 import pandas as pd
 import numpy as np
 from sklearn.decomposition import PCA
-from torch.utils.tensorboard import SummaryWriter
-import torchvision.transforms as transforms
+# from torch.utils.tensorboard import SummaryWriter
+# import torchvision.transforms as transforms
 from io import BytesIO
 import PIL.Image
 from pytorch_lightning.callbacks import Callback
@@ -65,7 +65,7 @@ class SampleVisualizationCallback(Callback):
                 )
             sns.kdeplot(train_samples[:, i], label="Original", ax=axes[i], color="blue")
             sns.kdeplot(samples[:, i], label="Sampled", ax=axes[i], color="orange")
-            axes[i].set_title(f"Dimension {i+1}\nWD = {wd:.4f}")
+            axes[i].set_title(f"{self.config['features_names'][i]}\nWD = {wd:.4f}")
             axes[i].legend()
 
         plt.tight_layout()
@@ -98,20 +98,21 @@ class SampleVisualizationCallback(Callback):
             palette=palette,
             levels=10,
             thresh=0.05,
-            ax=ax
+            ax=ax,
         )
 
+        # for label in ['Generated', 'Original']:
+        #     subset = df_all[df_all['Type'] == label]
+        #     sns.scatterplot(
+        #         x=subset['PCA1'], y=subset['PCA2'],
+        #         color=palette[label],
+        #         label=label,
+        #         s=10, alpha=0.5,
+        #         ax=ax
+        #     )
         for label in ['Generated', 'Original']:
-            subset = df_all[df_all['Type'] == label]
-            sns.scatterplot(
-                x=subset['PCA1'], y=subset['PCA2'],
-                color=palette[label],
-                label=label,
-                s=10, alpha=0.5,
-                ax=ax
-            )
-
-        ax.set_title("2D PCA Projection with KDE (Generated vs Original Samples)")
+            ax.scatter([], [], color=palette[label], label=label)
+        ax.set_title(f"2D PCA Projection with KDE for {self.config['name']} data")
         ax.set_xlabel("PCA 1")
         ax.set_ylabel("PCA 2")
         ax.legend(title='Data Type')

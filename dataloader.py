@@ -6,8 +6,12 @@ import pytorch_lightning as pl
 class CustomDataset(Dataset):
     def __init__(self, dataframe,config):
         self.X = torch.tensor(dataframe.drop(columns=config['target']).values, dtype=torch.float32)
-        self.y = torch.tensor(dataframe[config['target']].values, dtype=torch.long).squeeze()
-
+        if config['classification']:
+            self.y = torch.tensor(dataframe[config['target']].values, dtype=torch.long).squeeze()
+        else:
+            self.y = torch.tensor(dataframe[config['target']].values, dtype=torch.float32).squeeze()    
+        # print(self.X)
+        # print(self.y)
     def __len__(self):
         return len(self.X)
 
@@ -40,6 +44,5 @@ class CustomDataModule(pl.LightningDataModule):
 
 if __name__ == "__main__":
     from utils import CONFIG
-    config = CONFIG['german']
-    c = CustomDataset(dataframe=pd.read_csv(config['train_data']),config=config)
-    print(c.y.shape)
+    config = CONFIG['syn']
+    d = CustomDataset(pd.read_csv(config['train_data']),config)

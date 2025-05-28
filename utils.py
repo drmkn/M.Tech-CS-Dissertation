@@ -1,47 +1,109 @@
 import torch
 import json
 import numpy as np
+import pandas as pd
 import ot
-PREFIX = '/home/saptarshi/Dhruv/'
+import networkx as nx
+# PREFIX = '/home/saptarshi/Dhruv/Dissertation/'
 # PREFIX = '/user1/student/mtc/mtc2023/cs2306/Dhruv/Code/'
+PREFIX = '/home/dhruv/Files/Thesis/Dissertation/Code/'
 CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num_features' : 3,
-                   'name' : 'syn', 'train_data' : PREFIX + 'Dissertation/datasets/synthetic_dataset/syn-train.csv',
-                   'test_data' : PREFIX + 'Dissertation/datasets/synthetic_dataset/syn-test.csv',
-                   'dag_path' : PREFIX + 'Dissertation/dags_estimated/syn_dag.json',
-                   'graph_path' : PREFIX +'Dissertation/assets/est_syn_dag.png','classification' : 'False',
-                   'target' : ['Y'], 'var_names' : ['W','Z','X'], 'hidden_features_ann' : [100,100],
-                   'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01,'batch_size' : 64,
+                   'name' : 'syn', 'train_data' : PREFIX + 'datasets/synthetic_dataset/syn-train.csv',
+                   'test_data' : PREFIX + 'datasets/synthetic_dataset/syn-test.csv',
+                   'dag_path' : PREFIX + 'dags_estimated/syn_dag.json',
+                   'graph_path' : PREFIX +'assets/est_syn_dag.png',
+                   'target' : ['Y'], 'var_names' : ['W','Z','X'], 
+                   'batch_size' : 64,'hidden_layers_flow' : [256,256],
+                   'classification' : False, 'hidden_layers_mlp' : [100,100],
+                   'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01,
                    'gd_adjacency' : torch.tensor([[1,1,1],
                                                  [0,1,1],
-                                                 [0,0,1]])
+                                                 [0,0,1]]),
+                    'meta_data' : ['c']*3,                            
+                    'causal_graph' : nx.DiGraph([ (0,1),(0,2),
+                                     (1,2)
+                                    ]),
+                    # 'exp_methods' : ["pfi","icc_topo","icc_shap"],                
+                    'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
+                    'features_names' : ['W','Z','X']                                             
                    },
 
           'mpg' : {'seed' : 10,'train_samples' : 274, 'test_samples' : 118,'num_features' : 5,
-                   'name' : 'mpg', 'train_data' : PREFIX + 'Dissertation/datasets/auto+mpg/mpg-train.csv',
-                   'test_data' : PREFIX + 'Dissertation/datasets/auto+mpg/mpg-test.csv',
-                   'dag_path' : PREFIX + 'Dissertation/dags_estimated/mpg_dag.json',
-                   'graph_path' : PREFIX + 'Dissertation/assets/est_mpg_dag.png',
+                   'name' : 'mpg', 'train_data' : PREFIX + 'datasets/auto+mpg/mpg-train.csv',
+                   'test_data' : PREFIX + 'datasets/auto+mpg/mpg-test.csv',
+                   'dag_path' : PREFIX + 'dags_estimated/mpg_dag.json',
+                   'graph_path' : PREFIX + 'assets/est_mpg_dag.png',
                    'target' : ['M'], 'var_names' : ['C','D','H','W','A'], 'w_threshold' : 0,
-                   'lambda2' : 0.0, 'lambda1' : 0,
+                   'lambda2' : 0.0, 'lambda1' : 0,'batch_size' : 64,'hidden_layers_flow' : [256,256],
+                   'classification' : False, 'hidden_layers_mlp' : [100,100],
                    'gd_adjacency' : torch.tensor([[1,1,0,1,0],
                                                 [0,1,1,0,1],
                                                 [0,0,1,0,1],
                                                 [0,0,0,1,1],
-                                                [0,0,0,0,1]])
+                                                [0,0,0,0,1]]),
+                    'meta_data' : ['c']*5,                            
+                    'causal_graph' : nx.DiGraph([ (0,1),(0,3),
+                                           (1,2),(1,4),
+                                           (2,4),
+                                           (3,4)]),
+                    'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
+                    'features_names' : ['cylinders','displacement','horsepower','weight','acceleration']                                                  
                    },
           'german' : {'seed' : 30,'train_samples' : 800, 'test_samples' : 200,'num_features' : 4,
-                   'name' : 'german', 'train_data' : PREFIX +'Dissertation/datasets/german_credit/german-train.csv',
-                   'test_data' : PREFIX + 'Dissertation/datasets/german_credit/german-test.csv',
-                   'dag_path' : 'None',
-                   'graph_path' : 'None','classification' : 'True',
-                   'target' : ['R'], 'var_names' : ['G','A','C','D'], 'discrete_cols' : ['G','A','C','D'],
-                   'batch_size' : 64,'hidden_features_flow' : [256,256], 'hidden_features_ann' : [100,100],
+                   'name' : 'german', 'train_data' : PREFIX +'datasets/german_credit/german-train.csv',
+                   'test_data' : PREFIX + 'datasets/german_credit/german-test.csv',
+                   'dag_path' : 'None','graph_path' : 'None','target' : ['R'], 'var_names' : ['G','A','C','D'], 
+                   'discrete_cols' : ['G','A','C','D'],'batch_size' : 64,'hidden_layers_flow' : [256,256],
+                   'classification' : True, 'hidden_layers_mlp' : [256,256],
+                   'meta_data' : ['c']*4,
                    'gd_adjacency' : torch.tensor([[1,0,1,0],
                                                   [0,1,1,0],
                                                   [0,0,1,1],
-                                                  [0,0,0,1]])
-                   }        
+                                                  [0,0,0,1]]),
+                    'causal_graph' : nx.DiGraph([ (0,2),(1,2),
+                                           (1,2),(2,3)]),
+                    # 'exp_methods' : ["icc_shap"],                       
+                    'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
+                    'features_names' : ['gender','age','credit amount','repayment duration']                       
+                   },
+            'cancer' : {'seed' : 10,'train_samples' : 2400, 'test_samples' : 600,'num_features' : 7,
+                'name' : 'cancer', 'train_data' : PREFIX +'datasets/lung_cancer/cancer-train.csv',
+                'test_data' : PREFIX + 'datasets/lung_cancer/cancer-test.csv',
+                'dag_path' : 'None','graph_path' : 'None','target' : ['D'], 
+                'var_names' : ['A','T','S','L','B','E','X'], 
+                'discrete_cols' : ['A','T','S','L','B','E','X'],'batch_size' : 64,'hidden_layers_flow' : [128,128],
+                'classification' : True, 'hidden_layers_mlp' : [256,256],
+                'meta_data' : ['c']*7,
+                'gd_adjacency' : torch.tensor([ [1,1,0,0,0,0,0],
+                                                [0,1,0,0,0,1,0],
+                                                [0,0,1,1,1,0,0],
+                                                [0,0,0,1,0,1,0],
+                                                [0,0,0,0,1,0,0],
+                                                [0,0,0,0,0,1,1],
+                                                [0,0,0,0,0,0,1]]),
+                'causal_graph' : nx.DiGraph([(0,1),(1,5),(2,3),(2,4),
+                                             (3,5),(5,6)]),
+                # 'exp_methods' : ["icc_topo"],                       
+                'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo"],
+                'features_names' : ['asia','tub','smoke','lung','bronc','either','xray']                       
+                }        
                    }
+
+#for "ig","itg","sg","shap" local explanations
+openxai_config ={"ig": {
+            "method": "gausslegendre", 
+            "multiply_by_inputs": False},
+                "itg": {},
+                "sg": {
+                "n_samples": 100,
+                "standard_deviation": 0.1,
+                "seed": 0
+            },
+            "shap": {
+                "n_samples": 500,
+                "model_impl": "torch",
+                "seed": 0
+            }}
 
 
 def MMD(x, y, lengthscale):
@@ -135,6 +197,299 @@ def convert_to_cont(df,discrete_cols,seed):
         df[col] = df[col] + np.random.rand(df[col].shape[0])
         
     return df
+
+def torch_to_csv(tensor,name:str,header):
+    pd.DataFrame(tensor.numpy()).to_csv(name,index=False, header=header)
+
+
+def attr_to_dict(attributions):
+    feature_names, attributions = zip(*attributions)
+    feature_names = list(feature_names)
+    attributions = list(attributions)
+    n = len(feature_names)
+    attr_dict = dict()
+    for i in range(n):
+        attr_dict[feature_names[i]] = [attributions[i]]
+
+    return attr_dict    
+
+def create_feature_attribution_output(feature_names, attribution):
+    # Combine feature names and attribution values into a list of tuples
+    feature_attribution = list(zip(feature_names, attribution.tolist()))
+    
+    # Sort the list of tuples by attribution values in descending order
+    #feature_attribution.sort(key=lambda x: x[1], reverse=True)
+    
+    return feature_attribution
+
+import torch
+import pandas as pd
+from OpenXAI.openxai.explainers.perturbation_methods import BasePerturbation
+from OpenXAI.openxai.experiment_utils import generate_mask
+
+class Perturbation(BasePerturbation):
+    def __init__(self, data_format):
+        super(Perturbation, self).__init__(data_format)
+
+    def get_perturbed_inputs(self, original_sample: torch.FloatTensor, feature_mask: torch.BoolTensor,
+                             num_samples: int, feature_metadata: list) -> torch.tensor:
+        '''
+        feature mask : this indicates the static features
+        num_samples : number of perturbed samples.
+        '''
+        feature_type = feature_metadata
+        assert len(feature_mask) == len(original_sample),\
+            f"mask size == original sample in get_perturbed_inputs for {self.__class__}"
+        
+        
+        # Processing continuous columns
+        #torch.manual_seed(0)
+        perturbations =  torch.rand([num_samples, len(feature_type)]) 
+        # perturbations =  torch.randn([num_samples, len(feature_type)])
+        # print(perturbations)
+
+        
+        # keeping features static that are in top-K based on feature mask
+        perturbed_samples = original_sample * feature_mask  #+ perturbations * (~feature_mask)
+        
+        return perturbed_samples
+
+
+
+def pred_faith(k, inputs, targets, task, explanations, invert, model,  perturb_method:Perturbation,
+                           feature_metadata, ):#n_samples, seed):
+    seed = 10
+    top_k_mask =  generate_mask(explanations, k)
+    top_k_mask = torch.logical_not(top_k_mask) if invert else top_k_mask
+    #print(top_k_mask)
+
+    metrics1=[]
+    metrics2=[]
+    # for seed in seeds:
+    torch.manual_seed(seed)
+    x_perturb = perturb_method.get_perturbed_inputs(original_sample= inputs,
+                                                feature_mask=top_k_mask, 
+                                                num_samples=inputs.shape[0], feature_metadata=feature_metadata ) 
+    #print(torch.abs(x_perturb-inputs)[0:10])
+    y = model(inputs)
+    y_perturb = model(x_perturb)
+       #y - targets   ---> RMSE              if regression
+       #y_perturb - targets  ---> RMSE
+
+       #if classification
+       #  y---> class label ---> accuracy
+       # y_perturb ---> class label --->accuracy
+    if task == "regression":
+        rmse1 = torch.sqrt(torch.mean((y - targets) ** 2))
+        rmse2 = torch.sqrt(torch.mean((y_perturb - targets) ** 2))
+        metric2 = rmse2-rmse1
+        metrics2.append(torch.tensor(metric2))
+    elif task == "classification":
+        accuracy1 = (targets == torch.argmax(y, dim=1)).sum().item() / targets.size(0)
+        accuracy2 = (targets == torch.argmax(y_perturb, dim=1)).sum().item() / targets.size(0)
+        metric2 = accuracy2-accuracy1
+        metrics2.append(torch.tensor(metric2))
+            
+
+    
+    metric1 = torch.mean(torch.abs(y-y_perturb)[:,0])
+    # metrics1.append(metric1)
+    
+    # print(metrics1,metrics2)
+    # return torch.mean(torch.stack(metrics1)),torch.mean(torch.stack(metrics2)) #metrics
+    return metric1
+    # return torch.tensor(metric)
+
+
+
+import lime
+import lime.lime_tabular
+from lime import submodular_pick
+def sp_lime(data,features_names,class_names, network, task='classification' ):
+    num_features= data.size(1)
+    data = data.detach().numpy()
+    explainer = lime.lime_tabular.LimeTabularExplainer(training_data=data,
+                                                       feature_names= features_names,
+                                                        mode=task,random_state=0,
+                                                        categorical_features=None,
+                                                        verbose=False,
+                                                        discretize_continuous=False,
+                                                        class_names=class_names
+    )
+
+    predict_fn =lambda  data: network.forward(torch.from_numpy(data).float()).detach().numpy()
+    sp_obj = submodular_pick.SubmodularPick(explainer= explainer,data=data, 
+                                            predict_fn=predict_fn, method='full', num_exps_desired=1 ,
+                                            num_features=num_features
+    )
+
+    # Attempt to retrieve explanations for class label 1, or fallback to 0 if not available
+    explanation = sp_obj.sp_explanations[0]
+    target_label = 1 if 1 in explanation.local_exp else 0
+
+    # Print to debug which labels are available and which one is selected
+    # print("Available labels in explanation:", list(explanation.local_exp.keys()))
+    # print("Selected label:", target_label)
+
+    return normalize_abs_sum(explanation.as_list(label=target_label))
+    
+    # print(sp_obj.sp_explanations)
+
+    # return normalize_abs_sum(sp_obj.sp_explanations[0].as_list())
+    # return sp_obj.sp_explanations[0].as_list()
+
+
+
+def normalize_abs_sum(data, value_index=1):
+    # Extract the numeric values from the data
+    values = [x[value_index] for x in data]
+    total_abs = sum(abs(v) for v in values)
+    
+    if total_abs == 0:
+        normalized_values = [0 for _ in values]
+    else:
+        normalized_values = [abs(v) / total_abs for v in values]
+    
+    # Reconstruct the tuples with normalized values
+    normalized_data = [
+        x[:value_index] + (normalized_values[i],) + x[value_index+1:]
+        for i, x in enumerate(data)
+    ]
+    
+    return normalized_data
+
+def generate_lime_exp(data,features_names,class_names, network, task='classification'):
+    num_features= data.size(1)
+    data = data.detach().numpy()
+    explainer = lime.lime_tabular.LimeTabularExplainer(training_data=data,
+                                                       feature_names= features_names,
+                                                        mode=task,random_state=0,
+                                                        categorical_features=None,
+                                                        verbose=False,
+                                                        discretize_continuous=False,
+                                                        class_names=class_names
+    )
+
+    predict_fn =lambda  data: network.forward(torch.from_numpy(data).float()).detach().numpy()
+    local_explanations = {}
+    for feature in features_names:
+        local_explanations[feature] = []
+    for i in range(data.shape[0]):
+        exp = explainer.explain_instance(
+            data[i], 
+            predict_fn, 
+            num_features=num_features 
+        )
+        for feature,attr in exp.as_list():
+            local_explanations[feature].append(attr)
+    return local_explanations
+
+import networkx as nx
+import os
+import matplotlib.pyplot as plt
+def generate_causal_graph(config):
+    num_vars = config['num_features']
+    dag = config['gd_adjacency'] - torch.eye(num_vars) # 1's on the diagonal were required for the flow model
+    G = nx.DiGraph()
+    G.add_nodes_from(range(num_vars))
+
+    # Add edges from adjacency matrix
+    for i in range(num_vars):
+        for j in range(num_vars):
+            if abs(dag[i, j]) > 0:  # Non-zero edge
+                G.add_edge(i, j)
+
+    # Map variable names to nodes if available
+    if 'var_names' in config:
+        mapping = {i: name for i, name in enumerate(config['var_names'])}
+        G = nx.relabel_nodes(G, mapping)
+
+    # Save figure
+    os.makedirs("assets", exist_ok=True)
+    plt.figure(figsize=(6, 5))
+    pos = nx.spring_layout(G,seed=config['seed'])
+    nx.draw(G, pos, with_labels=True, node_size=1000, node_color='lightblue', font_weight='bold', arrows=True)
+    plt.title(f"Ground Truth Causal DAG assumed for {config['name']} dataset", pad=20)
+
+    # Adjust layout and save with bbox_inches
+    plt.tight_layout()
+    plt.savefig(f"assets/{config['name']}_dag.png", bbox_inches='tight')
+    plt.close()
+
+import json
+from typing import Dict
+
+def compute_pgu_pgi_sums(evaluation_metrics: Dict) -> Dict[str, Dict[str, float]]:
+    """
+    Compute the sum of PGU and PGI values across all k for each attribution method.
+
+    Parameters:
+    - evaluation_metrics (dict): Dictionary containing PGU and PGI values for each method.
+
+    Returns:
+    - dict: Dictionary with method names as keys and their PGU/PGI sums as values.
+    """
+    results = {}
+
+    for method, metrics in evaluation_metrics.items():
+        pgu_values = metrics.get("pgu", {})
+        pgi_values = metrics.get("pgi", {})
+        
+        # Sum only the first value (index 0) for each k
+        pgu_sum = sum(val[0] for val in pgu_values.values())
+        pgi_sum = sum(val[0] for val in pgi_values.values())
+        
+        results[method] = {
+            "pgu_sum": pgu_sum,
+            "pgi_sum": pgi_sum
+        }
+
+    return results
+
+
+def evaluate_exp(ge_dict,config,mlp_model):
+    n = len(ge_dict)
+    evaluation_metrics = dict()
+    df = pd.read_csv(config['test_data'])
+    targets = torch.tensor(df[config['target']].values,dtype=torch.long).squeeze()
+    inputs = torch.tensor(df.drop(columns=config['target']).values)
+    if config['classification']:
+        task = 'classification'
+        class_names = [0,1]
+        labels = targets
+    else:
+        task = 'regression'
+        class_names = None 
+        labels = None
+    for method,features in ge_dict.items():
+        evaluation_metrics[method] = dict()
+        exp = []
+        for _,attr in features.items():
+            exp.append(attr[0])
+
+        ge = torch.tensor(exp).to('cpu')
+
+        perturb_method =   Perturbation("tabular")
+        evaluation_metrics[method]['pgu'] = dict()
+        evaluation_metrics[method]['pgi'] = dict()
+        for k in range(1,n+1):
+            pgi = pred_faith(explanations= ge.repeat(config['test_samples'],1).float().to('cpu'),
+                        inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =False
+                        )
+            pgu = pred_faith(explanations= ge.repeat(inputs.shape[0],1).float().to('cpu'),
+                        inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =True
+                        )
+            # print(pgu,pgi)
+            evaluation_metrics[method]['pgu'][f'k={k}'] = [pgu.item()]#,pgu[1].item()))
+            evaluation_metrics[method]['pgi'][f'k={k}'] = [pgi.item()]#,pgi[1].item()))
+
+    return evaluation_metrics
+    
+
+    
+
+
+
 
 
 if __name__ == "__main__":
