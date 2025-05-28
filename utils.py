@@ -222,86 +222,6 @@ def create_feature_attribution_output(feature_names, attribution):
     
     return feature_attribution
 
-import torch
-import pandas as pd
-from OpenXAI.openxai.explainers.perturbation_methods import BasePerturbation
-from OpenXAI.openxai.experiment_utils import generate_mask
-
-class Perturbation(BasePerturbation):
-    def __init__(self, data_format):
-        super(Perturbation, self).__init__(data_format)
-
-    def get_perturbed_inputs(self, original_sample: torch.FloatTensor, feature_mask: torch.BoolTensor,
-                             num_samples: int, feature_metadata: list) -> torch.tensor:
-        '''
-        feature mask : this indicates the static features
-        num_samples : number of perturbed samples.
-        '''
-        feature_type = feature_metadata
-        assert len(feature_mask) == len(original_sample),\
-            f"mask size == original sample in get_perturbed_inputs for {self.__class__}"
-        
-        
-        # Processing continuous columns
-        #torch.manual_seed(0)
-        perturbations =  torch.rand([num_samples, len(feature_type)]) 
-        # perturbations =  torch.randn([num_samples, len(feature_type)])
-        # print(perturbations)
-
-        
-        # keeping features static that are in top-K based on feature mask
-        perturbed_samples = original_sample  + perturbations * (~feature_mask)
-        
-        return perturbed_samples
-
-
-
-def pred_faith(k, inputs, targets, task, explanations, invert, model,  perturb_method:Perturbation,
-                           feature_metadata, ):#n_samples, seed):
-    seed = 10
-    top_k_mask =  generate_mask(explanations, k)
-    top_k_mask = torch.logical_not(top_k_mask) if invert else top_k_mask
-    #print(top_k_mask)
-
-    metrics1=[]
-    metrics2=[]
-    # for seed in seeds:
-    torch.manual_seed(seed)
-    x_perturb = perturb_method.get_perturbed_inputs(original_sample= inputs,
-                                                feature_mask=top_k_mask, 
-                                                num_samples=inputs.shape[0], feature_metadata=feature_metadata ) 
-    #print(torch.abs(x_perturb-inputs)[0:10])
-    y = model(inputs)
-    y_perturb = model(x_perturb)
-       #y - targets   ---> RMSE              if regression
-       #y_perturb - targets  ---> RMSE
-
-       #if classification
-       #  y---> class label ---> accuracy
-       # y_perturb ---> class label --->accuracy
-    if task == "regression":
-        rmse1 = torch.sqrt(torch.mean((y - targets) ** 2))
-        rmse2 = torch.sqrt(torch.mean((y_perturb - targets) ** 2))
-        metric2 = rmse2-rmse1
-        metrics2.append(torch.tensor(metric2))
-    elif task == "classification":
-        accuracy1 = (targets == torch.argmax(y, dim=1)).sum().item() / targets.size(0)
-        accuracy2 = (targets == torch.argmax(y_perturb, dim=1)).sum().item() / targets.size(0)
-        metric2 = accuracy2-accuracy1
-        metrics2.append(torch.tensor(metric2))
-            
-
-    
-    metric1 = torch.mean(torch.abs(y-y_perturb)[:,0])
-    # metrics1.append(metric1)
-    
-    # print(metrics1,metrics2)
-    # return torch.mean(torch.stack(metrics1)),torch.mean(torch.stack(metrics2)) #metrics
-    return metric1
-    # return torch.tensor(metric)
-
-
-
 import lime
 import lime.lime_tabular
 from lime import submodular_pick
@@ -416,6 +336,120 @@ def generate_causal_graph(config):
     plt.savefig(f"assets/{config['name']}_dag.png", bbox_inches='tight')
     plt.close()
 
+
+##########################Explanations evaluation#######################################################
+import torch
+import pandas as pd
+from OpenXAI.openxai.explainers.perturbation_methods import BasePerturbation
+from OpenXAI.openxai.experiment_utils import generate_mask
+
+class Perturbation(BasePerturbation):
+    def __init__(self, data_format):
+        super(Perturbation, self).__init__(data_format)
+
+    def get_perturbed_inputs(self, original_sample: torch.FloatTensor, feature_mask: torch.BoolTensor,
+                             num_samples: int) -> torch.Tensor:
+        """
+        Generates num_samples perturbations of a single input,
+        by applying Gaussian noise to features where feature_mask is False.
+        """
+        assert len(feature_mask) == len(original_sample), \
+            f"Feature mask must match original sample shape in {self.__class__}"
+        
+        perturbations = torch.randn(num_samples, len(original_sample))  # [num_samples, F]
+        perturbed_samples = original_sample + perturbations * (~feature_mask)  # noise on unmasked features
+        
+        return perturbed_samples  # shape: [num_samples, F]
+
+
+@torch.no_grad()
+def pred_faith(k, inputs, explanations, invert, model, perturb_method: Perturbation):
+    """
+    Computes PGI or PGU depending on 'invert'.
+    """
+    top_k_mask = generate_mask(explanations, k)            # [N, F]
+    top_k_mask = ~top_k_mask if invert else top_k_mask
+
+    metric_per_sample = []
+
+    for i in range(inputs.shape[0]):
+        x = inputs[i]           # shape: [F]
+        mask = top_k_mask    # shape: [F]
+
+        if x.ndim == 0 or mask.ndim == 0:
+            raise ValueError(f"Input or mask is 0-D: x.shape = {x.shape}, mask.shape = {mask.shape}")
+
+        x_perturb = perturb_method.get_perturbed_inputs(
+            original_sample = x,
+            feature_mask    = mask,
+            num_samples     = 1000
+        )  # shape: [1000, F]
+
+        y = model(x.unsqueeze(0))             # shape: [1, D]
+        y_perturb = model(x_perturb)          # shape: [1000, D]
+
+        gap = torch.mean(torch.abs(y_perturb[:, 0] - y[0, 0]))  # scalar
+        metric_per_sample.append(gap.item())
+
+    return torch.tensor(metric_per_sample).mean().item()
+
+def evaluate_exp(ge_dict, config, mlp_model):
+    n = config['num_features']
+    evaluation_metrics = dict()
+    seed = 10
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    # Load test data
+    df = pd.read_csv(config['test_data'])
+    inputs = torch.tensor(df.drop(columns=config['target']).values).float()  # [N, F]
+
+    for method, features in ge_dict.items():
+        evaluation_metrics[method] = {'pgi': {}, 'pgu': {}}
+
+        # Stack explanations into tensor [N, F]
+        exp = [attr[0] for _, attr in features.items()]
+        ge = torch.tensor(exp).float().to('cpu')  # [N, F]
+
+        perturb_method = Perturbation("tabular")
+
+        for k in range(1, n + 1):
+            pgi = pred_faith(
+                k=k,
+                inputs=inputs,
+                explanations=ge,
+                invert=False,  # PGI: perturb top-k
+                model=mlp_model,
+                perturb_method=perturb_method
+            )
+            pgu = pred_faith(
+                k=k,
+                inputs=inputs,
+                explanations=ge,
+                invert=True,   # PGU: perturb all-but-top-k
+                model=mlp_model,
+                perturb_method=perturb_method
+            )
+
+            evaluation_metrics[method]['pgi'][f'k={k}'] = [pgi]
+            evaluation_metrics[method]['pgu'][f'k={k}'] = [pgu]
+
+    return evaluation_metrics
+
+
+def compute_auc(pgx_dict,config):
+    auc_results = {}
+    ks = range(1,config['num_features']+1)
+
+    for method, metrics in pgx_dict.items():
+        auc_results[method] = {}
+
+        for metric_type in ['pgi', 'pgu']:
+            y_vals = [metrics[metric_type][f'k={k}'][0] for k in ks]
+            auc = np.trapz(y_vals, ks) / (ks[-1] - ks[0])  # normalize
+            auc_results[method][f'{metric_type}_auc'] = auc
+
+    return auc_results
+
 import json
 from typing import Dict
 
@@ -447,44 +481,8 @@ def compute_pgu_pgi_sums(evaluation_metrics: Dict) -> Dict[str, Dict[str, float]
     return results
 
 
-def evaluate_exp(ge_dict,config,mlp_model):
-    n = config['num_features']
-    evaluation_metrics = dict()
-    df = pd.read_csv(config['test_data'])
-    targets = torch.tensor(df[config['target']].values,dtype=torch.long).squeeze()
-    inputs = torch.tensor(df.drop(columns=config['target']).values)
-    if config['classification']:
-        task = 'classification'
-        class_names = [0,1]
-        labels = targets
-    else:
-        task = 'regression'
-        class_names = None 
-        labels = None
-    for method,features in ge_dict.items():
-        evaluation_metrics[method] = dict()
-        exp = []
-        for _,attr in features.items():
-            exp.append(attr[0])
 
-        ge = torch.tensor(exp).to('cpu')
 
-        perturb_method =   Perturbation("tabular")
-        evaluation_metrics[method]['pgu'] = dict()
-        evaluation_metrics[method]['pgi'] = dict()
-        for k in range(1,n+1):
-            pgi = pred_faith(explanations= ge.repeat(config['test_samples'],1).float().to('cpu'),
-                        inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =False
-                        )
-            pgu = pred_faith(explanations= ge.repeat(inputs.shape[0],1).float().to('cpu'),
-                        inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =True
-                        )
-            # print(pgu,pgi)
-            evaluation_metrics[method]['pgu'][f'k={k}'] = [pgu.item()]#,pgu[1].item()))
-            evaluation_metrics[method]['pgi'][f'k={k}'] = [pgi.item()]#,pgi[1].item()))
-
-    return evaluation_metrics
-    
 
     
 
@@ -493,5 +491,9 @@ def evaluate_exp(ge_dict,config,mlp_model):
 
 
 if __name__ == "__main__":
-    config = CONFIG['syn']
-    print(get_adjacency(config))
+    # config = CONFIG['syn']
+    # print(get_adjacency(config))
+    P = Perturbation("tabular")
+    print(P.get_perturbed_inputs(torch.tensor([[1,2,3,4],[5,6,7,8]]),torch.tensor([[True, False, False,False],[False, True, False,False]], dtype=torch.bool),
+                                 10,['c']*4))
+
