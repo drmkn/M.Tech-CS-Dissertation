@@ -4,9 +4,9 @@ import numpy as np
 import pandas as pd
 import ot
 import networkx as nx
-# PREFIX = '/home/saptarshi/Dhruv/Dissertation/'
+PREFIX = '/home/saptarshi/Dhruv/Dissertation/'
 # PREFIX = '/user1/student/mtc/mtc2023/cs2306/Dhruv/Code/'
-PREFIX = '/home/dhruv/Files/Thesis/Dissertation/Code/'
+# PREFIX = '/home/dhruv/Files/Thesis/Dissertation/Code/'
 CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num_features' : 3,
                    'name' : 'syn', 'train_data' : PREFIX + 'datasets/synthetic_dataset/syn-train.csv',
                    'test_data' : PREFIX + 'datasets/synthetic_dataset/syn-test.csv',
@@ -84,7 +84,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                 'causal_graph' : nx.DiGraph([(0,1),(1,5),(2,3),(2,4),
                                              (3,5),(5,6)]),
                 # 'exp_methods' : ["icc_topo"],                       
-                'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo"],
+                'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
                 'features_names' : ['asia','tub','smoke','lung','bronc','either','xray']                       
                 }        
                    }

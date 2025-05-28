@@ -4,6 +4,8 @@ import torch,os
 from utils import generate_lime_exp,sp_lime,attr_to_dict,create_feature_attribution_output,openxai_config
 from architectures import AugmentedSCM,MLP,flow
 from pl_modules import MLPLightning,CausalNF
+# import sys
+# sys.path.append('/home/saptarshi/Dhruv/Dissertation/ICC/OpenXAI')
 from OpenXAI.openxai import Explainer
 from OpenXAI.openxai.experiment_utils import fill_param_dict
 from gam.gam import GAM
@@ -107,12 +109,12 @@ def generate_global_exps(config, mlp_model, scm_model):
                 time_dict[method] += (end_time-start_time)
 
             if methods_type[method] == 'local':
-                path = f'./explanations/local/{config['name']}/'
+                path = f"./explanations/local/{config['name']}/"
                 if method == "lime":
                     local_df = pd.DataFrame(data = local_exps)
                 else:
                     local_df = pd.DataFrame(data = local_exps.detach(),columns=features_names)
-                path_to_csv = path + f'{config['name']}_{method}.csv'
+                path_to_csv = path + f"{config['name']}_{method}.csv"
                 if not os.path.exists(path):
                     os.makedirs(path)
                 local_df.to_csv(path_to_csv,index = False)
@@ -124,25 +126,25 @@ def generate_global_exps(config, mlp_model, scm_model):
                 end_time = time.time()
                 time_dict[method] += (end_time-start_time)
                 #Save GAM explanations
-                path = f'./explanations/global/{config['name']}/'
+                path = f"./explanations/global/{config['name']}/"
                 global_df = pd.DataFrame(data = global_exps)
-                path_to_csv = path + f'{config['name']}_{method}.csv'
+                path_to_csv = path + f"{config['name']}_{method}.csv"
                 if not os.path.exists(path):
                     os.makedirs(path)
                 global_df.to_csv(path_to_csv,index = False)
 
             elif methods_type[method] == "global":
-                path = f'./explanations/global/{config['name']}/'
+                path = f"./explanations/global/{config['name']}/"
                 global_df = pd.DataFrame(data = global_exps)
-                path_to_csv = path + f'{config['name']}_{method}.csv'
+                path_to_csv = path + f"{config['name']}_{method}.csv"
                 if not os.path.exists(path):
                     os.makedirs(path)
                 global_df.to_csv(path_to_csv,index = False)
 
             ge_dict[method] = global_exps
             # ge = []
-            # for feature,attr in global_exps.items():
-            #     global_explanations[feature].append(attr[0])
+            for feature,attr in global_exps.items():
+                global_explanations[feature].append(attr[0])
             #     ge.append(attr[0])
             # ge = torch.tensor(ge).to('cpu')
 
@@ -270,7 +272,7 @@ def generate_attr_plot(global_explanations,config):
     )
 
     os.makedirs("assets",exist_ok=True)
-    pio.write_image(fig, f'assets/{config['name']}_attributions.png', format='png', width=1000, height=800, scale=2)
+    pio.write_image(fig, f"assets/{config['name']}_attributions.png", format='png', width=1000, height=800, scale=2)
 
     return fig
 

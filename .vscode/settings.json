@@ -1,6 +1,7 @@
 {
     "python.analysis.extraPaths": [
         "./notears",
-        "./zuko"
+        "./zuko",
+        "./ICC"
     ]
 }
