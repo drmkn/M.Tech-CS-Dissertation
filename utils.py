@@ -250,7 +250,7 @@ class Perturbation(BasePerturbation):
 
         
         # keeping features static that are in top-K based on feature mask
-        perturbed_samples = original_sample * feature_mask  #+ perturbations * (~feature_mask)
+        perturbed_samples = original_sample  + perturbations * (~feature_mask)
         
         return perturbed_samples
 
