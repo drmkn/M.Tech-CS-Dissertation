@@ -131,7 +131,7 @@ def train_NF(config,ground_truth_dag = True):
 
 
 if __name__ == "__main__":
-    for name in ['german','cancer']:
+    for name in ['syn']:
         for seed in [10,20,30]:
             CONFIG[name]['seed'] = seed
             config = CONFIG[name]
