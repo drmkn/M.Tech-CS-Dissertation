@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import MinMaxScaler
 import os
-from utils import CONFIG
+from utils import CONFIG,convert_to_cont
 
 script_dir = os.path.dirname(os.path.abspath(__file__))
 config = CONFIG['syn']
@@ -26,9 +27,11 @@ N = train_samples+test_samples
 features = generate_features(train_samples+test_samples)
 outputs = generate_output(features)
 df = pd.DataFrame(data = {'W':features[:,0], 'Z':features[:,1], 'X':features[:,2], 'Y' : outputs})
-df = (df - df.min())/(df.max()-df.min())
-train_df, test_df = train_test_split(df, train_size=train_samples/N, random_state=seed)
-print(train_df.shape,test_df.shape)
+df = convert_to_cont(df,config['discrete_cols'],config['seed'])
+train_df, test_df = train_test_split(df, train_size=config['train_samples']/(config['train_samples']+config['test_samples']), random_state=config['seed'])
+scaler = MinMaxScaler()
+train_df = pd.DataFrame(scaler.fit_transform(train_df),columns=config['var_names'] + ['Y'])
+test_df = pd.DataFrame(scaler.transform(test_df),columns=config['var_names']+['Y'])
 train_path = os.path.join(script_dir, 'syn-train.csv')
 test_path = os.path.join(script_dir, 'syn-test.csv')
 
