@@ -244,8 +244,8 @@ class Perturbation(BasePerturbation):
         
         # Processing continuous columns
         #torch.manual_seed(0)
-        # perturbations =  torch.rand([num_samples, len(feature_type)]) 
-        perturbations =  torch.randn([num_samples, len(feature_type)])
+        perturbations =  torch.rand([num_samples, len(feature_type)]) 
+        # perturbations =  torch.randn([num_samples, len(feature_type)])
         # print(perturbations)
 
         
@@ -258,45 +258,46 @@ class Perturbation(BasePerturbation):
 
 def pred_faith(k, inputs, targets, task, explanations, invert, model,  perturb_method:Perturbation,
                            feature_metadata, ):#n_samples, seed):
-    seeds = [10]
+    seed = 10
     top_k_mask =  generate_mask(explanations, k)
     top_k_mask = torch.logical_not(top_k_mask) if invert else top_k_mask
     #print(top_k_mask)
 
     metrics1=[]
     metrics2=[]
-    for seed in seeds:
-        torch.manual_seed(seed)
-        x_perturb = perturb_method.get_perturbed_inputs(original_sample= inputs,
-                                                    feature_mask=top_k_mask, 
-                                                    num_samples=inputs.shape[0], feature_metadata=feature_metadata ) 
+    # for seed in seeds:
+    torch.manual_seed(seed)
+    x_perturb = perturb_method.get_perturbed_inputs(original_sample= inputs,
+                                                feature_mask=top_k_mask, 
+                                                num_samples=inputs.shape[0], feature_metadata=feature_metadata ) 
     #print(torch.abs(x_perturb-inputs)[0:10])
-        y = model(inputs)
-        y_perturb = model(x_perturb)
+    y = model(inputs)
+    y_perturb = model(x_perturb)
        #y - targets   ---> RMSE              if regression
        #y_perturb - targets  ---> RMSE
 
        #if classification
        #  y---> class label ---> accuracy
        # y_perturb ---> class label --->accuracy
-        if task == "regression":
-            rmse1 = torch.sqrt(torch.mean((y - targets) ** 2))
-            rmse2 = torch.sqrt(torch.mean((y_perturb - targets) ** 2))
-            metric2 = rmse2-rmse1
-            metrics2.append(torch.tensor(metric2))
-        elif task == "classification":
-            accuracy1 = (targets == torch.argmax(y, dim=1)).sum().item() / targets.size(0)
-            accuracy2 = (targets == torch.argmax(y_perturb, dim=1)).sum().item() / targets.size(0)
-            metric2 = accuracy2-accuracy1
-            metrics2.append(torch.tensor(metric2))
+    if task == "regression":
+        rmse1 = torch.sqrt(torch.mean((y - targets) ** 2))
+        rmse2 = torch.sqrt(torch.mean((y_perturb - targets) ** 2))
+        metric2 = rmse2-rmse1
+        metrics2.append(torch.tensor(metric2))
+    elif task == "classification":
+        accuracy1 = (targets == torch.argmax(y, dim=1)).sum().item() / targets.size(0)
+        accuracy2 = (targets == torch.argmax(y_perturb, dim=1)).sum().item() / targets.size(0)
+        metric2 = accuracy2-accuracy1
+        metrics2.append(torch.tensor(metric2))
             
 
     
-        metric1 = torch.mean(torch.abs(y-y_perturb)[:,0])
-        metrics1.append(metric1)
+    metric1 = torch.mean(torch.abs(y-y_perturb)[:,0])
+    # metrics1.append(metric1)
     
     # print(metrics1,metrics2)
-    return torch.mean(torch.stack(metrics1)),torch.mean(torch.stack(metrics2)) #metrics
+    # return torch.mean(torch.stack(metrics1)),torch.mean(torch.stack(metrics2)) #metrics
+    return metric1
     # return torch.tensor(metric)
 
 
@@ -415,6 +416,77 @@ def generate_causal_graph(config):
     plt.savefig(f"assets/{config['name']}_dag.png", bbox_inches='tight')
     plt.close()
 
+import json
+from typing import Dict
+
+def compute_pgu_pgi_sums(evaluation_metrics: Dict) -> Dict[str, Dict[str, float]]:
+    """
+    Compute the sum of PGU and PGI values across all k for each attribution method.
+
+    Parameters:
+    - evaluation_metrics (dict): Dictionary containing PGU and PGI values for each method.
+
+    Returns:
+    - dict: Dictionary with method names as keys and their PGU/PGI sums as values.
+    """
+    results = {}
+
+    for method, metrics in evaluation_metrics.items():
+        pgu_values = metrics.get("pgu", {})
+        pgi_values = metrics.get("pgi", {})
+        
+        # Sum only the first value (index 0) for each k
+        pgu_sum = sum(val[0] for val in pgu_values.values())
+        pgi_sum = sum(val[0] for val in pgi_values.values())
+        
+        results[method] = {
+            "pgu_sum": pgu_sum,
+            "pgi_sum": pgi_sum
+        }
+
+    return results
+
+
+def evaluate_exp(ge_dict,config,mlp_model):
+    n = len(ge_dict)
+    evaluation_metrics = dict()
+    df = pd.read_csv(config['test_data'])
+    targets = torch.tensor(df[config['target']].values,dtype=torch.long).squeeze()
+    inputs = torch.tensor(df.drop(columns=config['target']).values)
+    if config['classification']:
+        task = 'classification'
+        class_names = [0,1]
+        labels = targets
+    else:
+        task = 'regression'
+        class_names = None 
+        labels = None
+    for method,features in ge_dict.items():
+        evaluation_metrics[method] = dict()
+        exp = []
+        for _,attr in features.items():
+            exp.append(attr[0])
+
+        ge = torch.tensor(exp).to('cpu')
+
+        perturb_method =   Perturbation("tabular")
+        evaluation_metrics[method]['pgu'] = dict()
+        evaluation_metrics[method]['pgi'] = dict()
+        for k in range(1,n+1):
+            pgi = pred_faith(explanations= ge.repeat(config['test_samples'],1).float().to('cpu'),
+                        inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =False
+                        )
+            pgu = pred_faith(explanations= ge.repeat(inputs.shape[0],1).float().to('cpu'),
+                        inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =True
+                        )
+            # print(pgu,pgi)
+            evaluation_metrics[method]['pgu'][f'k={k}'] = [pgu.item()]#,pgu[1].item()))
+            evaluation_metrics[method]['pgi'][f'k={k}'] = [pgi.item()]#,pgi[1].item()))
+
+    return evaluation_metrics
+    
+
+    
 
 
 

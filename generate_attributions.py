@@ -37,7 +37,7 @@ def generate_global_exps(config, mlp_model, scm_model):
     features_names = config['features_names']
     m = len(methods)
     n = len(features_names)
-    evaluation_metrics = dict()
+    # evaluation_metrics = dict()
     time_dict = dict()
     ge_dict = dict()
     global_explanations = dict()
@@ -45,7 +45,7 @@ def generate_global_exps(config, mlp_model, scm_model):
     for feature_name in features_names:
         global_explanations[feature_name] = []
     for method in methods:
-        evaluation_metrics[method] = dict() 
+        # evaluation_metrics[method] = dict() 
         time_dict[method] = 0
         ge_dict[method] = dict()
 
@@ -140,29 +140,31 @@ def generate_global_exps(config, mlp_model, scm_model):
                 global_df.to_csv(path_to_csv,index = False)
 
             ge_dict[method] = global_exps
-            ge = []
-            for feature,attr in global_exps.items():
-                global_explanations[feature].append(attr[0])
-                ge.append(attr[0])
-            ge = torch.tensor(ge).to('cpu')
+            # ge = []
+            # for feature,attr in global_exps.items():
+            #     global_explanations[feature].append(attr[0])
+            #     ge.append(attr[0])
+            # ge = torch.tensor(ge).to('cpu')
 
-            perturb_method =   Perturbation("tabular")
-            evaluation_metrics[method]['pgu'] = dict()
-            evaluation_metrics[method]['pgi'] = dict()
-            for k in range(1,n+1):
-                pgi = pred_faith(explanations= ge.repeat(inputs.shape[0],1).float().to('cpu'),
-                            inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =False
-                            )
-                pgu = pred_faith(explanations= ge.repeat(inputs.shape[0],1).float().to('cpu'),
-                            inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =True
-                            )
-                evaluation_metrics[method]['pgu'][f'k={k}'] = list((pgu[0].item(),pgu[1].item()))
-                evaluation_metrics[method]['pgi'][f'k={k}'] = list((pgi[0].item(),pgi[1].item()))
+            # perturb_method =   Perturbation("tabular")
+            # # evaluation_metrics[method]['pgu'] = dict()
+            # # evaluation_metrics[method]['pgi'] = dict()
+            # for k in range(1,n+1):
+            #     pgi = pred_faith(explanations= ge.repeat(inputs.shape[0],1).float().to('cpu'),
+            #                 inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =False
+            #                 )
+            #     pgu = pred_faith(explanations= ge.repeat(inputs.shape[0],1).float().to('cpu'),
+            #                 inputs=inputs.float(),task = task, targets= targets,model = mlp_model, k=k, perturb_method=perturb_method , feature_metadata=config['meta_data'], invert =True
+            #                 )
+            #     # print(pgu,pgi)
+            #     evaluation_metrics[method]['pgu'][f'k={k}'] = [pgu.item()]#,pgu[1].item()))
+            #     evaluation_metrics[method]['pgi'][f'k={k}'] = [pgi.item()]#,pgi[1].item()))
     
     output_data = {
                     "ge_dict": ge_dict,
-                    "evaluation_metrics": evaluation_metrics,
-                    "time_dict": time_dict
+                    # "evaluation_metrics": evaluation_metrics,
+                    "time_dict": time_dict,
+                    "global_explanations" : global_explanations
                         }
 
     # Save to a JSON file
@@ -171,7 +173,7 @@ def generate_global_exps(config, mlp_model, scm_model):
     with open(fp + "attribution.json", "w") as f:
         json.dump(output_data, f, indent=4)
 
-    return ge_dict, evaluation_metrics, time_dict, global_explanations
+    return ge_dict, time_dict, global_explanations
 
 def generate_attr_plot(global_explanations,config):
     generate_causal_graph(config)
