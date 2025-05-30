@@ -12,7 +12,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'test_data' : PREFIX + 'datasets/synthetic_dataset/syn-test.csv',
                    'dag_path' : PREFIX + 'dags_estimated/syn_dag.json',
                    'graph_path' : PREFIX +'assets/est_syn_dag.png',
-                   'target' : ['Y'], 'var_names' : ['W','Z','X'],'discrete_cols':[], 
+                   'target' : ['S'], 'var_names' : ['P','Q','R'],'discrete_cols':[], 
                    'batch_size' : 64,'hidden_layers_flow' : [256,256],
                    'classification' : False, 'hidden_layers_mlp' : [256,256],
                    'w_threshold' : 0.1,'lambda2' : 0.001, 'lambda1' : 0.01,
@@ -25,7 +25,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                     ]),
                     # 'exp_methods' : ["pfi","icc_topo","icc_shap"],                
                     'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
-                    'features_names' : ['W','Z','X']                                             
+                    'features_names' : ['P','Q','R']                                             
                    },
 
           'mpg' : {'seed' : 10,'train_samples' : 274, 'test_samples' : 118,'num_features' : 5,
@@ -35,7 +35,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                    'graph_path' : PREFIX + 'assets/est_mpg_dag.png',
                    'target' : ['M'], 'var_names' : ['C','D','H','W','A'], 'w_threshold' : 0,
                    'lambda2' : 0.0, 'lambda1' : 0,'batch_size' : 64,'hidden_layers_flow' : [256,256],
-                   'classification' : False, 'hidden_layers_mlp' : [100,100],
+                   'classification' : False, 'hidden_layers_mlp' : [256,256],
                    'gd_adjacency' : torch.tensor([[1,1,0,1,0],
                                                 [0,1,1,0,1],
                                                 [0,0,1,0,1],
@@ -71,7 +71,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                 'test_data' : PREFIX + 'datasets/lung_cancer/cancer-test.csv',
                 'dag_path' : 'None','graph_path' : 'None','target' : ['D'], 
                 'var_names' : ['A','T','S','L','B','E','X'], 
-                'discrete_cols' : ['A','T','S','L','B','E','X'],'batch_size' : 64,'hidden_layers_flow' : [128,128],
+                'discrete_cols' : ['A','T','S','L','B','E','X'],'batch_size' : 64,'hidden_layers_flow' : [256,256],
                 'classification' : True, 'hidden_layers_mlp' : [256,256],
                 'meta_data' : ['c']*7,
                 'gd_adjacency' : torch.tensor([ [1,1,0,0,0,0,0],
@@ -396,7 +396,7 @@ def pred_faith(k, inputs, explanations, invert, model, perturb_method: Perturbat
 def evaluate_exp(ge_dict, config, mlp_model):
     n = config['num_features']
     evaluation_metrics = dict()
-    seed = 10
+    seed = 30
     np.random.seed(seed)
     torch.manual_seed(seed)
     # Load test data
