@@ -391,12 +391,14 @@ def pred_faith(k, inputs, explanations, invert, model, perturb_method: Perturbat
         gap = torch.mean(torch.abs(y_perturb[:, 0] - y[0, 0]))  # scalar
         metric_per_sample.append(gap.item())
 
-    return torch.tensor(metric_per_sample).mean().item()
+    return torch.tensor(metric_per_sample)
+    # return torch.tensor(metric_per_sample).mean().item(), torch.tensor(metric_per_sample).std().item()
 
 def evaluate_exp(ge_dict, config, mlp_model):
     n = config['num_features']
     evaluation_metrics = dict()
-    seed = 30
+    evaluation_metrics_per_sample = dict()
+    seed = 10
     np.random.seed(seed)
     torch.manual_seed(seed)
     # Load test data
@@ -405,7 +407,7 @@ def evaluate_exp(ge_dict, config, mlp_model):
 
     for method, features in ge_dict.items():
         evaluation_metrics[method] = {'pgi': {}, 'pgu': {}}
-
+        evaluation_metrics_per_sample[method] = {'pgi': {}, 'pgu': {}}
         # Stack explanations into tensor [N, F]
         exp = [attr[0] for _, attr in features.items()]
         ge = torch.tensor(exp).float().to('cpu')  # [N, F]
@@ -430,55 +432,74 @@ def evaluate_exp(ge_dict, config, mlp_model):
                 perturb_method=perturb_method
             )
 
-            evaluation_metrics[method]['pgi'][f'k={k}'] = [pgi]
-            evaluation_metrics[method]['pgu'][f'k={k}'] = [pgu]
+            evaluation_metrics[method]['pgi'][f'k={k}'] = [pgi.mean().item()]
+            evaluation_metrics[method]['pgu'][f'k={k}'] = [pgu.mean().item()]
+            evaluation_metrics_per_sample[method]['pgi'][f'k={k}'] = pgi
+            evaluation_metrics_per_sample[method]['pgu'][f'k={k}'] = pgu
 
-    return evaluation_metrics
+    return evaluation_metrics,evaluation_metrics_per_sample
 
 
-def compute_auc(pgx_dict,config):
+def aggregate_auc_or_sum(pgx_dict,config):
     auc_results = {}
+    auc_show = {}
+    sum_results = {}
+    sum_show = {}
     ks = range(1,config['num_features']+1)
 
     for method, metrics in pgx_dict.items():
         auc_results[method] = {}
+        auc_show[method] = {}
+        sum_results[method] = {}
+        sum_show[method] = {}
+
 
         for metric_type in ['pgi', 'pgu']:
-            y_vals = [metrics[metric_type][f'k={k}'][0] for k in ks]
-            auc = np.trapz(y_vals, ks) / (ks[-1] - ks[0])  # normalize
-            auc_results[method][f'{metric_type}_auc'] = auc
+            auc_results[method][f'{metric_type}_auc_per_sample'] = []
+            sum_results[method][f'{metric_type}_sum_per_sample'] = []
+            for i in range(config['test_samples']):
+                y_vals = [metrics[metric_type][f'k={k}'][i] for k in ks]
+                auc = np.trapz(y_vals, ks)/ (ks[-1] - ks[0])  # normalize
+                auc_results[method][f'{metric_type}_auc_per_sample'].append(auc)
+                sum_results[method][f'{metric_type}_sum_per_sample'].append(sum(y_vals))
+            auc_mean,auc_std_err = torch.tensor(auc_results[method][f'{metric_type}_auc_per_sample']).mean().item(),torch.tensor(auc_results[method][f'{metric_type}_auc_per_sample']).std().item()/(config['test_samples'])**0.5    
+            auc_show[method][f"{metric_type}_auc"] = f"{auc_mean} +- {auc_std_err}"
+            sum_mean,sum_std_err = torch.tensor(sum_results[method][f'{metric_type}_sum_per_sample']).mean().item(),torch.tensor(sum_results[method][f'{metric_type}_sum_per_sample']).std().item()/(config['test_samples'])**0.5    
+            sum_show[method][f"{metric_type}_sum"] = f"{sum_mean} +- {sum_std_err}"
 
-    return auc_results
+    return auc_results, auc_show,sum_results, sum_show
 
-import json
-from typing import Dict
+# import json
+# from typing import Dict
 
-def compute_pgu_pgi_sums(evaluation_metrics: Dict) -> Dict[str, Dict[str, float]]:
-    """
-    Compute the sum of PGU and PGI values across all k for each attribution method.
+# def compute_pgu_pgi_sums(evaluation_metrics: Dict,config) -> Dict[str, Dict[str, float]]:
+#     """
+#     Compute the sum of PGU and PGI values across all k for each attribution method.
 
-    Parameters:
-    - evaluation_metrics (dict): Dictionary containing PGU and PGI values for each method.
+#     Parameters:
+#     - evaluation_metrics (dict): Dictionary containing PGU and PGI values for each method.
 
-    Returns:
-    - dict: Dictionary with method names as keys and their PGU/PGI sums as values.
-    """
-    results = {}
+#     Returns:
+#     - dict: Dictionary with method names as keys and their PGU/PGI sums as values.
+#     """
+#     sum_results = {}
+#     sum_show = {}
+#     ks = range(1,config['num_features']+1)
 
-    for method, metrics in evaluation_metrics.items():
-        pgu_values = metrics.get("pgu", {})
-        pgi_values = metrics.get("pgi", {})
-        
-        # Sum only the first value (index 0) for each k
-        pgu_sum = sum(val[0] for val in pgu_values.values())
-        pgi_sum = sum(val[0] for val in pgi_values.values())
-        
-        results[method] = {
-            "pgu_sum": pgu_sum,
-            "pgi_sum": pgi_sum
-        }
+#     for method, metrics in evaluation_metrics.items():
+#         sum_results[method] = {}
+#         sum_show[method] = {}
 
-    return results
+#         for metric_type in ['pgi', 'pgu']:
+#             auc_results[method][f'{metric_type}_auc_per_sample'] = []
+#             for i in range(config['test_samples']):
+#                 y_vals = [metrics[metric_type][f'k={k}'][i] for k in ks]
+#                 auc = np.trapz(y_vals, ks)/ (ks[-1] - ks[0])  # normalize
+#                 auc_results[method][f'{metric_type}_auc_per_sample'].append(auc)
+#             mean,std_err = torch.tensor(auc_results[method][f'{metric_type}_auc_per_sample']).mean().item(),torch.tensor(auc_results[method][f'{metric_type}_auc_per_sample']).std().item()/(config['test_samples'])**0.5    
+#             auc_show[method][f"{metric_type}_auc"] = f"{mean} +- {std_err}"
+
+#     return auc_results, auc_show
 
 
 
