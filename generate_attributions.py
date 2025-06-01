@@ -19,7 +19,7 @@ import time
 import plotly.io as pio
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-exp_indices = {0:"ig", 1:"itg", 2:"sg", 3:"shap", 4:"lime", 5:"sp_lime", 6:"pfi", 7:"icc_topo", 8:"icc_shap"}
+exp_indices = {0:"shap", 1:"lime", 2:"sp_lime", 3:"pfi",4:"ig", 5:"sg", 6:"itg",7:"icc_topo", 8:"icc_shap"}
 methods_type = {"ig":'local',"itg":'local',"sg":'local',"shap":'local',"lime":'local',"sp_lime":'global',"pfi":'global',"icc_topo":'global',"icc_shap":'global'}
 method_names = {"ig":'IG',"itg":'IxG',"sg":'SG',"shap":'SHAP',"lime":'LIME',"sp_lime":'SP LIME',"pfi":'PFI',"icc_topo":'ICC TOPO',"icc_shap":'ICC SHAP'}
 def generate_global_exps(config, mlp_model, scm_model):
@@ -190,17 +190,29 @@ def generate_attr_plot(global_explanations,config):
     # Plotly grouped bar chart
     fig = go.Figure()
 
+#     color_blind_palette = [
+#     "#E69F00",  # Orange
+#     "#56B4E9",  # Light Blue
+#     "#009E73",  # Green
+#     "#F5C710",  # Amber
+#     "#0072B2",  # Blue
+#     "#999999",  # Grey
+#     "#000000",   # Black
+#     "#D55E00",  # Red
+#     "#CC79A7",  # Purple
+#    ]
+    
     color_blind_palette = [
-    "#E69F00",  # Orange
-    "#56B4E9",  # Light Blue
-    "#009E73",  # Green
-    "#F5C710",  # Amber
-    "#0072B2",  # Blue
-    "#999999",  # Grey
-    "#000000",   # Black
-    "#D55E00",  # Red
-    "#CC79A7",  # Purple
-]
+    "#75bea7",  # Greenish
+    "#ef6128",  # Salmon
+    "#5f5d5d",  # Light grey
+    "#AA7A33",  # Tan
+    "#df52a9",  # Pink
+    "#92dc1d",  # Lime
+    "#e6cf6a",  # Yellow
+    "#435d97",  # Blue
+    "#56B4E9"   # Light Blue
+    ]
     # Color scheme for the methods
     # colors = {
     # 'IG': 'rgb(21,138,106)',    # Light steel blue - professional, clear

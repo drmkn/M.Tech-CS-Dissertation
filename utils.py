@@ -24,7 +24,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                      (1,2)
                                     ]),
                     # 'exp_methods' : ["pfi","icc_topo","icc_shap"],                
-                    'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
+                    'exp_methods' : ["shap","lime","sp_lime","pfi","ig","sg","itg","icc_topo","icc_shap"],
                     'features_names' : ['P','Q','R']                                             
                    },
 
@@ -46,7 +46,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                                            (1,2),(1,4),
                                            (2,4),
                                            (3,4)]),
-                    'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
+                    'exp_methods' : ["shap","lime","sp_lime","pfi","ig","sg","itg","icc_topo","icc_shap"],
                     'features_names' : ['cylinders','displacement','horsepower','weight','acceleration']                                                  
                    },
           'german' : {'seed' : 30,'train_samples' : 800, 'test_samples' : 200,'num_features' : 4,
@@ -63,7 +63,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                     'causal_graph' : nx.DiGraph([ (0,2),(1,2),
                                            (1,2),(2,3)]),
                     # 'exp_methods' : ["icc_shap"],                       
-                    'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
+                    'exp_methods' : ["shap","lime","sp_lime","pfi","ig","sg","itg","icc_topo","icc_shap"],
                     'features_names' : ['gender','age','credit amount','repayment duration']                       
                    },
             'cancer' : {'seed' : 10,'train_samples' : 2400, 'test_samples' : 600,'num_features' : 7,
@@ -84,7 +84,7 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                 'causal_graph' : nx.DiGraph([(0,1),(1,5),(2,3),(2,4),
                                              (3,5),(5,6)]),
                 # 'exp_methods' : ["icc_topo"],                       
-                'exp_methods' : ["ig","itg","sg","shap","lime","sp_lime","pfi","icc_topo","icc_shap"],
+                'exp_methods' : ["shap","lime","sp_lime","pfi","ig","sg","itg","icc_topo","icc_shap"],
                 'features_names' : ['asia','tub','smoke','lung','bronc','either','xray']                       
                 }        
                    }
