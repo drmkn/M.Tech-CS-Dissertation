@@ -95,14 +95,14 @@ openxai_config ={"ig": {
             "multiply_by_inputs": False},
                 "itg": {},
                 "sg": {
-                "n_samples": 100,
+                "n_samples": 500,
                 "standard_deviation": 0.1,
-                "seed": 0
+                "seed": 1
             },
             "shap": {
                 "n_samples": 500,
                 "model_impl": "torch",
-                "seed": 0
+                "seed": 1
             }}
 
 
@@ -230,7 +230,7 @@ def sp_lime(data,features_names,class_names, network, task='classification' ):
     data = data.detach().numpy()
     explainer = lime.lime_tabular.LimeTabularExplainer(training_data=data,
                                                        feature_names= features_names,
-                                                        mode=task,random_state=0,
+                                                        mode=task,random_state=1,
                                                         categorical_features=None,
                                                         verbose=False,
                                                         discretize_continuous=False,
@@ -283,7 +283,7 @@ def generate_lime_exp(data,features_names,class_names, network, task='classifica
     data = data.detach().numpy()
     explainer = lime.lime_tabular.LimeTabularExplainer(training_data=data,
                                                        feature_names= features_names,
-                                                        mode=task,random_state=0,
+                                                        mode=task,random_state=1,
                                                         categorical_features=None,
                                                         verbose=False,
                                                         discretize_continuous=False,
@@ -398,7 +398,7 @@ def evaluate_exp(ge_dict, config, mlp_model):
     n = config['num_features']
     evaluation_metrics = dict()
     evaluation_metrics_per_sample = dict()
-    seed = 10
+    seed = 1
     np.random.seed(seed)
     torch.manual_seed(seed)
     # Load test data

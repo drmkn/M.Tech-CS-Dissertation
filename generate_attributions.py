@@ -82,7 +82,7 @@ def generate_global_exps(config, mlp_model, scm_model):
                 causal_graph = config['causal_graph']
                 icc_topo = torch.cat(Intrinsic_Causal_Contribution(neural_network=aug_scm,
                                 topological_orederings= all_topological_sorts(causal_graph,n),
-                                dim=n,rqmc= False, sample_size=50000
+                                dim=n,rqmc= False, sample_size=1000
                                 ),dim=0).to('cpu')
 
                 global_exps = attr_to_dict(create_feature_attribution_output(features_names,icc_topo))
@@ -93,7 +93,7 @@ def generate_global_exps(config, mlp_model, scm_model):
             elif method == "icc_shap":
                 start_time = time.time()
                 aug_scm = AugmentedSCM(scm_ = scm_model , mlp_ = mlp_model)
-                icc_shap = torch.cat(ICC_SHAP(dim=n,model=aug_scm,sample_size=50000,rqmc=False),dim=0).to('cpu')
+                icc_shap = torch.cat(ICC_SHAP(dim=n,model=aug_scm,sample_size=1000,rqmc=False),dim=0).to('cpu')
                 global_exps = attr_to_dict(create_feature_attribution_output(features_names,icc_shap))
                 end_time = time.time()
                 time_dict[method] += (end_time-start_time)
