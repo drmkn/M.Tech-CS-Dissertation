@@ -7,9 +7,10 @@ import networkx as nx
 PREFIX = '/home/saptarshi/Dhruv/Dissertation/'
 # PREFIX = '/user1/student/mtc/mtc2023/cs2306/Dhruv/Code/'
 # PREFIX = '/home/dhruv/Files/Thesis/Dissertation/Code/'
-CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num_features' : 3,
+CONFIG = {'syn' : {'seed' : 1,'train_samples' : 7500, 'test_samples' : 1500,'val_samples' : 1000,'num_features' : 3,
                    'name' : 'syn', 'train_data' : PREFIX + 'datasets/synthetic_dataset/syn-train.csv',
                    'test_data' : PREFIX + 'datasets/synthetic_dataset/syn-test.csv',
+                   'val_data' : PREFIX + 'datasets/synthetic_dataset/syn-val.csv',
                    'dag_path' : PREFIX + 'dags_estimated/syn_dag.json',
                    'graph_path' : PREFIX +'assets/est_syn_dag.png',
                    'target' : ['S'], 'var_names' : ['P','Q','R'],'discrete_cols':[], 
@@ -49,9 +50,10 @@ CONFIG = {'syn' : {'seed' : 10,'train_samples' : 2000, 'test_samples' : 600,'num
                     'exp_methods' : ["shap","lime","sp_lime","pfi","ig","sg","itg","icc_topo","icc_shap"],
                     'features_names' : ['cylinders','displacement','horsepower','weight','acceleration']                                                  
                    },
-          'german' : {'seed' : 30,'train_samples' : 800, 'test_samples' : 200,'num_features' : 4,
+          'german' : {'seed' : 1,'train_samples' : 750, 'test_samples' : 150, 'val_samples' : 100,'num_features' : 4,
                    'name' : 'german', 'train_data' : PREFIX +'datasets/german_credit/german-train.csv',
                    'test_data' : PREFIX + 'datasets/german_credit/german-test.csv',
+                   'val_data' : PREFIX + 'datasets/german_credit/german-val.csv',
                    'dag_path' : 'None','graph_path' : 'None','target' : ['R'], 'var_names' : ['G','A','C','D'], 
                    'discrete_cols' : ['G','A','C','D'],'batch_size' : 64,'hidden_layers_flow' : [256,256],
                    'classification' : True, 'hidden_layers_mlp' : [256,256],

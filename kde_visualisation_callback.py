@@ -34,7 +34,7 @@ class SampleVisualizationCallback(Callback):
         flow_module = pl_module.flow()  # Assuming pl_module is an instance of CausalNF
 
         with torch.no_grad():
-            base_sample = flow_module.base.sample((self.config['train_samples'],))
+            base_sample = flow_module.base.sample((self.config['test_samples'],))
             samples = flow_module.transform(base_sample).cpu().numpy()
 
         
@@ -47,7 +47,7 @@ class SampleVisualizationCallback(Callback):
         # else:
         #     test_samples = test_batch.cpu().numpy()
 
-        train_df = pd.read_csv(self.config['train_data'])
+        train_df = pd.read_csv(self.config['test_data'])
         train_df.drop(columns=self.config['target'],inplace=True)
         train_samples = train_df.values
 

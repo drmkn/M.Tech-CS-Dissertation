@@ -24,20 +24,21 @@ class CustomDataModule(pl.LightningDataModule):
         self.config = config
         self.train_path = config['train_data']
         self.test_path = config['test_data']
+        self.val_path = config['val_data']
         self.batch_size = config['batch_size']
 
     def setup(self, stage=None):
         # Load data
         self.train_dataset = CustomDataset(pd.read_csv(self.train_path),self.config)
         self.test_dataset = CustomDataset(pd.read_csv(self.test_path),self.config)
-        self.val_dataset = CustomDataset(pd.read_csv(self.test_path),self.config)
+        self.val_dataset = CustomDataset(pd.read_csv(self.val_path),self.config)
 
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=8)
 
     def val_dataloader(self):
-        return DataLoader(self.val_dataset, batch_size=self.config['test_samples'], shuffle=False,num_workers=4)
+        return DataLoader(self.val_dataset, batch_size=self.config['val_samples'], shuffle=False,num_workers=4)
 
     def test_dataloader(self):
         return DataLoader(self.test_dataset, batch_size=self.config['test_samples'], shuffle= False,num_workers=4)

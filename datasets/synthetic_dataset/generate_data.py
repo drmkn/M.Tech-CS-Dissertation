@@ -10,8 +10,9 @@ config = CONFIG['syn']
 
 seed = config['seed']
 np.random.seed(seed)
-train_samples = config['train_samples']
-test_samples = config['test_samples']
+# train_size = config['train_samples']
+# val_size = config['val_samples']
+# test_size = config['test_samples']
 
 def generate_features(num_samples):
     features = np.zeros((num_samples, 3))
@@ -23,22 +24,26 @@ def generate_features(num_samples):
 def generate_output(features):
     return (features[:, 2])**2 + np.sqrt(np.exp(features[:, 1])) + np.sqrt(0.1)*np.random.randn(features.shape[0]) #S
 
-N = train_samples+test_samples
-features = generate_features(train_samples+test_samples)
+N = config['train_samples']+config['test_samples']+config['val_samples']
+features = generate_features(N)
 outputs = generate_output(features)
 df = pd.DataFrame(data = {'P':features[:,0], 'Q':features[:,1], 'R':features[:,2], 'S' : outputs})
 df = convert_to_cont(df,config['discrete_cols'],config['seed'])
 # df_x = df[config['var_names']]
 # df_y = df[config['target']]
-train_df, test_df = train_test_split(df, train_size=config['train_samples']/(config['train_samples']+config['test_samples']), random_state=config['seed'])
+train_df, temp_df = train_test_split(df, train_size=config['train_samples']/(config['train_samples']+config['test_samples']+config['val_samples']), random_state=config['seed'])
+test_df, val_df = train_test_split(temp_df, train_size=config['test_samples']/(config['test_samples']+config['val_samples']), random_state=config['seed'])
 scaler = MinMaxScaler()
 train_df = pd.DataFrame(scaler.fit_transform(train_df),columns=config['var_names'] + ['S'])
 # train_df['S'] = train_y.values
 test_df = pd.DataFrame(scaler.transform(test_df),columns=config['var_names'] + ['S'])
 # test_df['S'] = test_y.values
+val_df = pd.DataFrame(scaler.transform(val_df),columns=config['var_names'] + ['S'])
 train_path = os.path.join(script_dir, 'syn-train.csv')
 test_path = os.path.join(script_dir, 'syn-test.csv')
+val_path = os.path.join(script_dir, 'syn-val.csv')
 
 train_df.to_csv(train_path,index = False)
 test_df.to_csv(test_path,index = False)
+val_df.to_csv(val_path,index = False)
 

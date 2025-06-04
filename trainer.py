@@ -51,8 +51,8 @@ def train_MLP(config):
                 default_root_dir='lightning_logs',
                 accelerator='gpu' if use_gpu else 'cpu',
                 devices=1,  # <- always 1, even for CPU
-                callbacks=[model_pl.checkpoint(), early_stopping_callback],
-                max_epochs=1000,
+                callbacks=[model_pl.checkpoint(),early_stopping_callback],
+                max_epochs=500,
                 fast_dev_run=False,
                 precision="16-mixed" if use_gpu else 32,
                 reload_dataloaders_every_n_epochs=10,
@@ -113,8 +113,8 @@ def train_NF(config,ground_truth_dag = True):
                 default_root_dir='lightning_logs',
                 accelerator='gpu' if use_gpu else 'cpu',
                 devices=1,  # <- always 1, even for CPU
-                callbacks=[scm.checkpoint(), early_stopping_callback, vis_callback],
-                max_epochs=1000,
+                callbacks=[scm.checkpoint(),early_stopping_callback, vis_callback],
+                max_epochs=500,
                 fast_dev_run=False,
                 precision="16-mixed" if use_gpu else 32,
                 reload_dataloaders_every_n_epochs=10,
@@ -131,9 +131,9 @@ def train_NF(config,ground_truth_dag = True):
 
 
 if __name__ == "__main__":
-    for name in ['cancer']:
-        for seed in [10,20,30]:
+    for name in ['syn']:
+        for seed in [1,2,3]:
             CONFIG[name]['seed'] = seed
             config = CONFIG[name]
             train_MLP(config=config)
-            train_NF(config=config,ground_truth_dag=True)
+            # train_NF(config=config,ground_truth_dag=True)
