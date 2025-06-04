@@ -67,6 +67,7 @@ class MLPLightning(pl.LightningModule):
         else:
             self.test_preds.append(logits.cpu().numpy())
             self.test_targets.append(y.cpu().numpy())
+
         
         self.log("test_loss", loss)
 
@@ -86,11 +87,24 @@ class MLPLightning(pl.LightningModule):
                 "precision": prec,
                 "recall": rec
             }
+
+            # Log to TensorBoard
+            self.logger.experiment.add_scalar("test/test_acc", acc, self.global_step)
+            self.logger.experiment.add_scalar("test/test_f1", f1, self.global_step)
+            self.logger.experiment.add_scalar("test/test_precision", prec, self.global_step)
+            self.logger.experiment.add_scalar("test/test_recall", rec, self.global_step)
+
+
         else:
             rmse = np.sqrt(np.mean((preds - targets) ** 2))
             self.test_metrics = {
                 "rmse": rmse
             }
+
+            # Log to TensorBoard
+            self.logger.experiment.add_scalar("test/test_rmse", rmse, self.global_step)
+
+
 
         print("Test Metrics:", self.test_metrics)
 

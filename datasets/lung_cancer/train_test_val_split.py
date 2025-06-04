@@ -9,13 +9,16 @@ df = pd.read_csv(PREFIX + "datasets/lung_cancer/data.csv")
 df.rename(columns={'asia' : 'A','tub' : 'T','smoke' : 'S', 'lung' : 'L',
                    'bronc' : 'B', 'either' : 'E', 'xray' : 'X', 'dysp' : 'D'},inplace=True)
 df = convert_to_cont(df,config['discrete_cols'],config['seed'])
-train_df, test_df = train_test_split(df, train_size=config['train_samples']/(config['train_samples']+config['test_samples']), random_state=config['seed'])
+train_df, temp_df = train_test_split(df, train_size=config['train_samples']/(config['train_samples']+config['test_samples']+config['val_samples']), random_state=config['seed'])
+test_df, val_df = train_test_split(temp_df, train_size=config['test_samples']/(config['test_samples']+config['val_samples']), random_state=config['seed'])
 scaler = MinMaxScaler()
 train_df = pd.DataFrame(scaler.fit_transform(train_df),columns=config['var_names'] + ['D'])
 test_df = pd.DataFrame(scaler.transform(test_df),columns=config['var_names']+['D'])
+val_df = pd.DataFrame(scaler.transform(val_df),columns=config['var_names']+['D'])
 train_path = os.path.join(script_dir, 'cancer-train.csv')
 test_path = os.path.join(script_dir, 'cancer-test.csv')
-
+val_path = os.path.join(script_dir, 'cancer-val.csv')
 train_df.to_csv(train_path,index = False)
 test_df.to_csv(test_path,index = False)
+val_df.to_csv(val_path,index = False)
 

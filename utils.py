@@ -68,9 +68,10 @@ CONFIG = {'syn' : {'seed' : 1,'train_samples' : 7500, 'test_samples' : 1500,'val
                     'exp_methods' : ["shap","lime","sp_lime","pfi","ig","sg","itg","icc_topo","icc_shap"],
                     'features_names' : ['gender','age','credit amount','repayment duration']                       
                    },
-            'cancer' : {'seed' : 10,'train_samples' : 2400, 'test_samples' : 600,'num_features' : 7,
+            'cancer' : {'seed' : 1,'train_samples' : 7500, 'test_samples' : 1500,'val_samples' : 1000,'num_features' : 7,
                 'name' : 'cancer', 'train_data' : PREFIX +'datasets/lung_cancer/cancer-train.csv',
                 'test_data' : PREFIX + 'datasets/lung_cancer/cancer-test.csv',
+                'val_data' : PREFIX + 'datasets/lung_cancer/cancer-val.csv',
                 'dag_path' : 'None','graph_path' : 'None','target' : ['D'], 
                 'var_names' : ['A','T','S','L','B','E','X'], 
                 'discrete_cols' : ['A','T','S','L','B','E','X'],'batch_size' : 64,'hidden_layers_flow' : [256,256],
