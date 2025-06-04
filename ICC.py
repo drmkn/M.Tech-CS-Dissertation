@@ -56,7 +56,7 @@ def ICC(variable,model, topological_orderings: list, dim:int,
 
     shape = (num_samples,dim)
     if not rqmc:
-        torch.manual_seed(0)
+        # torch.manual_seed(10)
         sample_U = torch.randn(shape,dtype=torch.float32,device=model.device)
         sample_V = torch.randn(shape,dtype=torch.float32,device=model.device)
     else:
@@ -96,7 +96,7 @@ def ICC_SHAP(dim, model, sample_size=512, rqmc=False):
         variable =torch.tensor([i])
         shape = (sample_size,dim)
         if not rqmc:
-            torch.manual_seed(0)
+            # torch.manual_seed(10)
             sample_U = torch.randn(shape,dtype=torch.float32,device=model.device)
             sample_V = torch.randn(shape,dtype=torch.float32,device=model.device)
         else:

@@ -76,10 +76,10 @@ def flow(num_features, adjacency,hidden_features=[64,64]):
                    UnconditionalTransform(SigmoidTransform),
         ], 
         base = UnconditionalDistribution(
-        #            BoxUniform,
-        #            torch.zeros(num_features),
-        #            torch.ones(num_features)
-                #    buffer=True,) if base_ == 'uniform' else 
+                #    BoxUniform,
+                #    torch.zeros(num_features),
+                #    torch.ones(num_features),
+                #    buffer=True) #if base_ == 'uniform' else 
                     DiagNormal, ##normal base
                     torch.zeros(num_features),
                     torch.ones(num_features),

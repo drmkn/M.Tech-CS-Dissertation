@@ -132,8 +132,8 @@ def train_NF(config,ground_truth_dag = True):
 
 if __name__ == "__main__":
     for name in ['cancer']:
-        for seed in [1,2,3]:
+        for seed in [1]:
             CONFIG[name]['seed'] = seed
             config = CONFIG[name]
-            train_MLP(config=config)
-            # train_NF(config=config,ground_truth_dag=True)
+            # train_MLP(config=config)
+            train_NF(config=config,ground_truth_dag=True)

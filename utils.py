@@ -86,7 +86,7 @@ CONFIG = {'syn' : {'seed' : 1,'train_samples' : 7500, 'test_samples' : 1500,'val
                                                 [0,0,0,0,0,0,1]]),
                 'causal_graph' : nx.DiGraph([(0,1),(1,5),(2,3),(2,4),
                                              (3,5),(5,6)]),
-                # 'exp_methods' : ["icc_topo"],                       
+                # 'exp_methods' : ["icc_topo","icc_shap"],                       
                 'exp_methods' : ["shap","lime","sp_lime","pfi","ig","sg","itg","icc_topo","icc_shap"],
                 'features_names' : ['asia','tub','smoke','lung','bronc','either','xray']                       
                 }        
@@ -286,7 +286,7 @@ def generate_lime_exp(data,features_names,class_names, network, task='classifica
     data = data.detach().numpy()
     explainer = lime.lime_tabular.LimeTabularExplainer(training_data=data,
                                                        feature_names= features_names,
-                                                        mode=task,random_state=1,
+                                                        mode=task,random_state=10,
                                                         categorical_features=None,
                                                         verbose=False,
                                                         discretize_continuous=False,
@@ -401,7 +401,7 @@ def evaluate_exp(ge_dict, config, mlp_model):
     n = config['num_features']
     evaluation_metrics = dict()
     evaluation_metrics_per_sample = dict()
-    seed = 1
+    seed = 2
     np.random.seed(seed)
     torch.manual_seed(seed)
     # Load test data
