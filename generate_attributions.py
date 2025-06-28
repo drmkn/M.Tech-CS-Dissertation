@@ -245,7 +245,7 @@ def generate_attr_plot(global_explanations,config):
     fig.update_layout(
         # title='Global Explanations per Method for Auto Mpg dataset',
         # xaxis_title='Features',
-        # yaxis_title='Attributions',
+        yaxis_title='Attributions',
         barmode='group',  # Group bars side-by-side
         bargap=0.45,  # Close the gap between bars
         bargroupgap=1,  # Add a gap between feature groups
