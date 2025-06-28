@@ -63,7 +63,7 @@ pip install torch zuko openxai captum gam pytorch-lightning
 
 ## 🙏 Acknowledgements
 
-I would like to express my sincere gratitude to Prof. [Utpal Garain](https://scholar.google.co.in/citations?user=4Jlqf30AAAAJ\&hl=en) for his invaluable guidance and support at the Indian Statistical Institute, Kolkata. I am also deeply thankful to [Saptarshi Saha](https://github.com/Saptarshi-Saha-1996) for his help and significant contributions to this work.
+I would like to express my sincere gratitude to Prof. [Utpal Garain](https://scholar.google.co.in/citations?user=4Jlqf30AAAAJ\&hl=en) for his invaluable guidance and support at the Indian Statistical Institute, Kolkata for this work. I am also deeply thankful to [Saptarshi Saha](https://github.com/Saptarshi-Saha-1996) for his help and significant contributions to this work.
 
 
 
